@@ -42,6 +42,7 @@ function set_config { # sets config vars
 
   # confdir can be delivered as path (must contain /)
   if [ `echo $FTPLCFG | grep /` ] ; then 
+    CONFHOME=""
     CONFDIR=$(readlink -f $FTPLCFG 2>/dev/null || \
               ( echo $FTPLCFG|grep -v '^/' 1>/dev/null 2>&1 \
                && echo $(pwd)/${FTPLCFG} ) || \
@@ -51,13 +52,16 @@ function set_config { # sets config vars
     CONFDIR="${CONFHOME}/${FTPLCFG}"
   # or in home/.ftplicity folder (OLD)
   elif [ -d "${CONFHOME_COMPAT}" ]; then
+    CONFHOME="${CONFHOME_COMPAT}"
     CONFDIR="${CONFHOME_COMPAT}/${FTPLCFG}"
     warning_oldhome "${CONFHOME_COMPAT}" "${CONFHOME}"
   # root can put profiles under /etc/duply (NEW) if path exists
   elif [ -d "${CONFHOME_ETC}" ] && [ "$EUID" -eq 0 ]; then
+    CONFHOME="${CONFHOME_ETC}"
     CONFDIR="${CONFHOME_ETC}/${FTPLCFG}"
   # root can keep profiles under /etc/ftplicity (OLD) if path exists
   elif [ -d "${CONFHOME_ETC_COMPAT}" ] && [ "$EUID" -eq 0 ]; then
+    CONFHOME="${CONFHOME_ETC_COMPAT}"
     CONFDIR="${CONFHOME_ETC_COMPAT}/${FTPLCFG}"
     warning_oldhome "${CONFHOME_ETC_COMPAT}" "${CONFHOME_ETC}"
   # hmm no profile folder there, then use default for error later
@@ -68,6 +72,7 @@ function set_config { # sets config vars
   # remove trailing slash, get profile name etc.
   CONFDIR="${CONFDIR%/}"
   NAME="${CONFDIR##*/}"
+  MAINCONF="${CONFHOME}/conf"
   CONF="$CONFDIR/conf"
   PRE="$CONFDIR/pre"
   POST="$CONFDIR/post"
@@ -633,6 +638,10 @@ elif [ ! -f "$CONF" ] ; then
 elif [ ! -r "$CONF" ] ; then
   error "'$CONF' not readable."
 else
+  # pre-read main config if any
+  if [ -n "$CONFHOME" -a -f "$MAINCONF" ]; then
+    . "$MAINCONF"
+  fi
   . "$CONF"
   KEYFILE="${KEYFILE//.asc/${GPG_KEY:+.$GPG_KEY}.asc}"
   TEMP_DIR=${TEMP_DIR:-'/tmp'}
