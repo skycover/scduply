@@ -1,0 +1,17 @@
+README for duply
+
+duply (grown out of ftplicity), is a shell front end to duplicity that
+simplifies the usage by managing settings for each backup job in profiles.
+It supports executing multiple commands in a batch mode to enable single
+line cron entries and executes pre/post backup scripts.
+Since version 1.5.0 all duplicity backends are supported. Hence the name
+changed from ftplicity to duply.
+
+See http://duply.net or http://ftplicity.sourceforge.net/ for more info.
+(c) 2006 Christiane Ruetten, Heise Zeitschriften Verlag, Germany
+(c) 2008-2010 Edgar Soldin (changes since version 1.3)
+
+LICENSE:
+This program is licensed under GPLv2.
+Please read the accompanying license information in gpl.txt.
+
