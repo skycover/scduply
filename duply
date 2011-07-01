@@ -416,21 +416,21 @@ DUPL_VARS_GLOBAL="TMPDIR='$TEMP_DIR' \
  ${DUPL_ARG_ENC}"
 }
 
-function process_conf {
+function process_conf { # convert shell variables to the duplicity arguments
   if [ -n "$TIME_SEPARATOR" ]; then
-    DUPL_PARAMS="\$DUPL_PARAMS --time-separator $DPL_TIME_SEPARATOR "
+    DUPL_PARAMS="$DUPL_PARAMS --time-separator $DPL_TIME_SEPARATOR "
   fi
   if [ -n "$SHORT_FILENAMES" ]; then
-    DUPL_PARAMS="\$DUPL_PARAMS --short-filenames "
+    DUPL_PARAMS="$DUPL_PARAMS --short-filenames "
   fi
   if [ -n "$MAX_FULLBKP_AGE" ]; then
-    DUPL_PARAMS="\$DUPL_PARAMS --full-if-older-than \$MAX_FULLBKP_AGE " 
+    DUPL_PARAMS="$DUPL_PARAMS --full-if-older-than \$MAX_FULLBKP_AGE " 
   fi
   if [ -n "$VOLSIZE" ]; then
-    DUPL_PARAMS="\$DUPL_PARAMS --volsize \$VOLSIZE "
+    DUPL_PARAMS="$DUPL_PARAMS --volsize \$VOLSIZE "
   fi
   if [ -n "$EXTRA_DUPL_PARAMS" ]; then
-    DUPL_PARAMS="\$DUPL_PARAMS $EXTRA_DUPL_PARAMS " 
+    DUPL_PARAMS="$DUPL_PARAMS $EXTRA_DUPL_PARAMS " 
   fi
 }
 
@@ -660,6 +660,7 @@ else
     . "$MAINCONF"
   fi
   . "$CONF"
+  process_conf
   KEYFILE="${KEYFILE//.asc/${GPG_KEY:+.$GPG_KEY}.asc}"
   TEMP_DIR=${TEMP_DIR:-'/tmp'}
   # backward compatibility: old TARGET_PW overrides silently new TARGET_PASS if set
