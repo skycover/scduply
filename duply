@@ -227,32 +227,31 @@ SOURCE='${DEFAULT_SOURCE}'
 # NOTE: '-' is not valid as it conflicts with date separator.
 # ATTENTION: only use this with duplicity < 0.5.10, since then default file 
 #            naming is compatible and this option is pending depreciation 
-#DUPL_PARAMS="\$DUPL_PARAMS --time-separator _ "
+#TIME_SEPARATOR="_"
 
 # activates duplicity --short-filenames option, when uploading to a file
 # system that can't have filenames longer than 30 characters (e.g. Mac OS 8)
 # or have problems with ':' as part of the filename (e.g. Microsoft Windows)
 # ATTENTION: only use this with duplicity < 0.5.10, later versions default file 
 #            naming is compatible and this option is pending depreciation
-#DUPL_PARAMS="\$DUPL_PARAMS --short-filenames "
+# Set to anything to ON
+#SHORT_FILENAMES=""
  
 # activates duplicity --full-if-older-than option (since duplicity v0.4.4.RC3) 
 # forces a full backup if last full backup reaches a specified age, for the 
 # format of MAX_FULLBKP_AGE see duplicity man page, chapter TIME_FORMATS
 # Uncomment the following two lines to enable this setting.
 #MAX_FULLBKP_AGE=1M
-#DUPL_PARAMS="\$DUPL_PARAMS --full-if-older-than \$MAX_FULLBKP_AGE " 
 
 # sets duplicity --volsize option (available since v0.4.3.RC7)
 # set the size of backup chunks to VOLSIZE MB instead of the default 25MB.
 # VOLSIZE must be number of MB's to set the volume size to.
 # Uncomment the following two lines to enable this setting. 
 #VOLSIZE=50
-#DUPL_PARAMS="\$DUPL_PARAMS --volsize \$VOLSIZE "
 
 # more duplicity command line options can be added in the following way
 # don't forget to leave a separating space char at the end
-#DUPL_PARAMS="\$DUPL_PARAMS --put_your_options_here " 
+#EXTRA_DUPL_PARAMS=""
 
 EOF
 
@@ -415,6 +414,24 @@ DUPL_PARAMS_GLOBAL="${DUPL_NAME} ${DUPL_PARAM_ENC} \
 
 DUPL_VARS_GLOBAL="TMPDIR='$TEMP_DIR' \
  ${DUPL_ARG_ENC}"
+}
+
+function process_conf {
+  if [ -n "$TIME_SEPARATOR" ]; then
+    DUPL_PARAMS="\$DUPL_PARAMS --time-separator $DPL_TIME_SEPARATOR "
+  fi
+  if [ -n "$SHORT_FILENAMES" ]; then
+    DUPL_PARAMS="\$DUPL_PARAMS --short-filenames "
+  fi
+  if [ -n "$MAX_FULLBKP_AGE" ]; then
+    DUPL_PARAMS="\$DUPL_PARAMS --full-if-older-than \$MAX_FULLBKP_AGE " 
+  fi
+  if [ -n "$VOLSIZE" ]; then
+    DUPL_PARAMS="\$DUPL_PARAMS --volsize \$VOLSIZE "
+  fi
+  if [ -n "$EXTRA_DUPL_PARAMS" ]; then
+    DUPL_PARAMS="\$DUPL_PARAMS $EXTRA_DUPL_PARAMS " 
+  fi
 }
 
 function duplify { # the actual wrapper function
