@@ -36,9 +36,9 @@ DEFAULT_GPG_PW='_GPG_PASSWORD_'
 # function definitions ##########################
 function set_config { # sets config vars
   local CONFHOME_COMPAT="$HOME/.ftplicity"
-  local CONFHOME="$HOME/.duply"
   local CONFHOME_ETC_COMPAT="/etc/ftplicity"
   local CONFHOME_ETC="/etc/duply"
+  CONFHOME="$HOME/.duply"
 
   # confdir can be delivered as path (must contain /)
   if [ `echo $FTPLCFG | grep /` ] ; then 
@@ -79,6 +79,7 @@ function set_config { # sets config vars
   EXCLUDE="$CONFDIR/exclude"
   SRCHOLDER="$CONFDIR/source"
   KEYFILE="$CONFDIR/gpgkey.asc"
+  SAVED_ENV="$CONFDIR/saved.env"
   
 }
 
@@ -152,7 +153,10 @@ Some more informations can be found in the manual page of this package.
 USAGE
 }
 
-function create_config {
+function write_config {
+  local CONFDIR="$1"
+  local CONF="$2"
+
   if [ ! -d "$CONFDIR" ] ; then
     mkdir -p "$CONFDIR" || error "Couldn't create config '$CONFDIR'."
   # create initial config file
@@ -161,8 +165,8 @@ function create_config {
 #  GPG_KEY='disabled' - disables encryption alltogether
 #  GPG_KEY='01234567'; GPG_PW='passphrase' - public key encryption
 #  GPG_PW='passphrase' - symmetric encryption using passphrase only
-GPG_KEY='${DEFAULT_GPG_KEY}'
-GPG_PW='${DEFAULT_GPG_PW}'
+#GPG_KEY='${DEFAULT_GPG_KEY}'
+#GPG_PW='${DEFAULT_GPG_PW}'
 # gpg options passed from duplicity to gpg process (default='')
 # e.g. "--trust-model pgp|classic|direct|always" 
 #   or "--compress-algo=bzip2 --bzip2-compress-level=9"
@@ -194,7 +198,7 @@ GPG_PW='${DEFAULT_GPG_PW}'
 #            http://en.wikipedia.org/wiki/Url_encoding 
 #            if you define the credentials as TARGET_USER, TARGET_PASS below 
 #            duply will url_encode them for you
-TARGET='${DEFAULT_TARGET}'
+#TARGET='${DEFAULT_TARGET}'
 # optionally the username/password can be defined as extra variables
 # setting them here _and_ in TARGET results in an error
 #TARGET_USER='${DEFAULT_TARGET_USER}'
@@ -256,7 +260,25 @@ TARGET='${DEFAULT_TARGET}'
 #EXTRA_DUPL_PARAMS=""
 
 EOF
+fi
+}
 
+function create_config {
+  if [ -n "$CONFHOME" -a ! -f "$MAINCONF" ]; then
+    write_config "$CONFHOME" "$MAINCONF"
+    # Hints on first usage
+    cat <<EOF
+
+The main profile '$CONFHOME' has been created.
+The global config file has been created as 
+'$MAINCONF'.
+You should now adjust this config file to your needs.
+
+EOF
+  fi
+  write_config "$CONFDIR" "$CONF"
+  touch "$EXCLUDE"
+  echo "$DEFAULT_SOURCE" >"$SRCHOLDER"
   # Hints on first usage
   cat <<EOF
 
@@ -268,7 +290,6 @@ You should now adjust this config file to your needs.
 $(hint_profile)
 
 EOF
-fi
 
 }
 
@@ -946,11 +967,23 @@ fi # end disabled
 
 # Exclude file is needed, create it if necessary
 [ -f "$EXCLUDE" ] || touch "$EXCLUDE"
-[ -f "$SRCHOLDER" ] || echo "$DEFAULT_SOURCE" >"$SRCHOLDER"
+
+. $SAVED_ENV
+cat <<EOF >$SAVED_ENV
+# This file is automatically created so while you backup the profile
+# you will save security credentials even if they are set in the global config
+
+SAVED_FTPLCFG=$FTPLCFG
+SAVED_GPG_KEY=$GPG_KEY
+SAVED_GPG_PW=$GPG_PW
+SAVED_TARGET=$TARGET
+SAVED_TARGET_USER=$TARGET_USER
+SAVED_TARGET_PASS=$TARGET_PASS
+EOF
 
 # export key if not already #############################################################
-# TODO: export again if key changed, how to detect?
-if [ "$GPG_KEY" != 'disabled' ] && [ ! -z "$GPG_KEY" ] && [ ! -f "$KEYFILE" ] ; then
+if [ "$GPG_KEY" != 'disabled' ] && [ ! -z "$GPG_KEY" ]; then
+  if [ ! -f "$KEYFILE" -o "$GPG_KEY" != "$SAVED_GPG_KEY" ]; then
      touch "$KEYFILE" && chmod 0600 "$KEYFILE"
      $GPG --armor --export $GPG_KEY >>"$KEYFILE"
      $GPG --armor --export-secret-keys $GPG_KEY >>"$KEYFILE"
@@ -959,6 +992,7 @@ if [ "$GPG_KEY" != 'disabled' ] && [ ! -z "$GPG_KEY" ] && [ ! -f "$KEYFILE" ] ; 
 Created it now.
 
 Hint: You should backup your changed profile folder now."    
+  fi
 fi
 
 
