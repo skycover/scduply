@@ -77,6 +77,7 @@ function set_config { # sets config vars
   PRE="$CONFDIR/pre"
   POST="$CONFDIR/post"
   EXCLUDE="$CONFDIR/exclude"
+  SRCHOLDER="$CONFDIR/source"
   KEYFILE="$CONFDIR/gpgkey.asc"
   
 }
@@ -198,9 +199,6 @@ TARGET='${DEFAULT_TARGET}'
 # setting them here _and_ in TARGET results in an error
 #TARGET_USER='${DEFAULT_TARGET_USER}'
 #TARGET_PASS='${DEFAULT_TARGET_PASS}'
-
-# base directory to backup
-SOURCE='${DEFAULT_SOURCE}'
 
 # Time frame for old backups to keep, Used for the "purge" command.  
 # see duplicity man page, chapter TIME_FORMATS)
@@ -661,6 +659,9 @@ else
   fi
   . "$CONF"
   process_conf
+  if [ -f "$SRCHOLDER" ]; then
+    SOURCE="`head -1 $SRCHOLDER`"
+  fi
   KEYFILE="${KEYFILE//.asc/${GPG_KEY:+.$GPG_KEY}.asc}"
   TEMP_DIR=${TEMP_DIR:-'/tmp'}
   # backward compatibility: old TARGET_PW overrides silently new TARGET_PASS if set
@@ -929,6 +930,7 @@ fi # end disabled
 
 # Exclude file is needed, create it if necessary
 [ -f "$EXCLUDE" ] || touch "$EXCLUDE"
+[ -f "$SRCHOLDER" ] || echo "$DEFAULT_SOURCE" >"$SRCHOLDER"
 
 # export key if not already #############################################################
 # TODO: export again if key changed, how to detect?
