@@ -247,6 +247,10 @@ TARGET='${DEFAULT_TARGET}'
 # Uncomment the following two lines to enable this setting. 
 #VOLSIZE=50
 
+# sets duplicity cache dir for local signature and manifest files
+# activates --archive-dir option
+#ARCHIVE_DIR=/var/cache/duply
+
 # more duplicity command line options can be added in the following way
 # don't forget to leave a separating space char at the end
 #EXTRA_DUPL_PARAMS=""
@@ -423,6 +427,10 @@ function process_conf { # convert shell variables to the duplicity arguments
   fi
   if [ -n "$MAX_FULLBKP_AGE" ]; then
     DUPL_PARAMS="$DUPL_PARAMS --full-if-older-than \$MAX_FULLBKP_AGE " 
+  fi
+  if [ -n "$ARCHIVE_DIR" ]; then
+    DUPL_PARAMS="$DUPL_PARAMS --archive-dir $ARCHIVE_DIR "
+    mkdir -p "$ARCHIVE_DIR"
   fi
   if [ -n "$VOLSIZE" ]; then
     DUPL_PARAMS="$DUPL_PARAMS --volsize \$VOLSIZE "
