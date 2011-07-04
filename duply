@@ -701,6 +701,11 @@ TARGET_SPLIT_URL=$(awk -v target="$TARGET" 'BEGIN { \
   }')
 eval ${TARGET_SPLIT_URL}
 
+# Add configuration name to the target's hostpath
+if [ -n "$FTPLCFG" ]; then
+  TARGET_URL_HOSTPATH="$TARGET_URL_HOSTPATH/$FTPLCFG"
+fi
+
 # check if backend specific software is in path
 [ -n "$(echo ${TARGET_URL_PROT} | grep -i -e '^ftp://$')" ] && \
 	[ -z "$(which ncftp 2>/dev/null)" ] && error_path "Protocol 'ftp' needs ncftp. Installed und available in path?" 
