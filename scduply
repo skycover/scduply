@@ -429,7 +429,8 @@ function duplicity_params_global {
 		local DUPL_ARG_ENC=${GPG_PW:+"PASSPHRASE='$GPG_PW'"} && \
 		local GPG_OPTS=${GPG_OPTS:+"--gpg-options '${GPG_OPTS}'"}
 
-	duplicity_version_ge 601 && local DUPL_NAME="--name 'duply_${NAME}'"
+        # XXX skipped check for duplicity version
+	local DUPL_NAME="--name '${NAME}'"
 
 DUPL_PARAMS_GLOBAL="${DUPL_NAME} ${DUPL_PARAM_ENC} \
  --verbosity '${VERBOSITY:-4}' \
@@ -440,9 +441,6 @@ DUPL_VARS_GLOBAL="TMPDIR='$TEMP_DIR' \
 }
 
 function process_conf { # convert shell variables to the duplicity arguments
-  if [ -n "$FTPLCFG" ]; then
-    DUPL_PARAMS="$DUPL_PARAMS --name $FTPLCFG "
-  fi
   if [ -n "$TIME_SEPARATOR" ]; then
     DUPL_PARAMS="$DUPL_PARAMS --time-separator $DPL_TIME_SEPARATOR "
   fi
@@ -724,7 +722,7 @@ eval ${TARGET_SPLIT_URL}
 
 # Add configuration name to the target's hostpath
 if [ -n "$FTPLCFG" ]; then
-  TARGET_URL_HOSTPATH="$TARGET_URL_HOSTPATH/$FTPLCFG"
+  TARGET_URL_HOSTPATH="$TARGET_URL_HOSTPATH/$NAME"
 fi
 
 # check if backend specific software is in path
@@ -975,7 +973,7 @@ cat <<EOF >$SAVED_ENV
 # This file is automatically created so while you backup the profile
 # you will save security credentials even if they are set in the global config
 
-SAVED_FTPLCFG=$FTPLCFG
+SAVED_NAME=$NAME
 SAVED_GPG_KEY=$GPG_KEY
 SAVED_GPG_PW=$GPG_PW
 SAVED_TARGET=$TARGET
