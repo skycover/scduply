@@ -968,7 +968,9 @@ fi # end disabled
 # Exclude file is needed, create it if necessary
 [ -f "$EXCLUDE" ] || touch "$EXCLUDE"
 
-. $SAVED_ENV
+# Read saved environment to track gpg key changes
+[ -f $SAVED_ENV ] && . $SAVED_ENV
+# Save current environment
 cat <<EOF >$SAVED_ENV
 # This file is automatically created so while you backup the profile
 # you will save security credentials even if they are set in the global config
