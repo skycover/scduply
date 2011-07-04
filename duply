@@ -715,7 +715,7 @@ cmds=${cmds//backup/pre_bkp_post}
 # OR key can be imported from keyfile 
 # OR fail
 if [ -z "$SOURCE" -o "$SOURCE" == "${DEFAULT_SOURCE}" ]; then
- error " Source Path (setting SOURCE) not set or still default value in conf file 
+ error " Source Path (setting SOURCE) not set or still default value in $SRCHOLDER file 
  '$CONF'."
 
 elif [ -z "$TARGET" -o "$TARGET" == "${DEFAULT_TARGET}" ]; then
