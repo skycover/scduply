@@ -1,0 +1,37 @@
+Major changes on top of duply.
+
+* GLOBAL CONFIG
+
+The file "conf" in ~/.duply or /etc/duply is sourced before profile's "conf"
+
+This file is created automatically if not present.
+By default the file contains no active settings - only the template.
+
+* NAMED OPTIONS IN THE CONFIG FILE
+
+The volume size and other duplicity options are now setted via separate shell
+variables.
+
+So it's now ok to source two global and profile's configs sequentally.
+
+* SOURCE separated to the file
+
+Backup source ($SOURCE) is now separated to the file "source", because now
+it's ok the configurations with empty profile's "conf" file.
+
+* SAVED ENVIRONMENT
+
+The backup credentials (TARGET, GPG_* etc.) are now automatically saved to
+"saved.env" file so it's still ok to save only profile folder even with global
+config.
+
+* PROFILE NAME PASSED TO DUPLICITY
+
+Now the profile's name (if any) is passed to duplicity with --name and with
+$TARGET's suffix.
+So if the TARGET is file:///blah/blah, then the actual target folder will be
+file:///blah/blah/NAME and the backup will be named NAME
+
+* ARCHIVE_DIR FOR DUPLICITY
+
+Support for --archive-dir

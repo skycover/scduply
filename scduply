@@ -22,7 +22,7 @@
 ME_LONG="$0"
 ME="$(basename $0)"
 ME_NAME="${ME%%.*}"
-ME_VERSION="1.5.2.3"
+ME_VERSION="1.5.2.3-sc.1.0"
 ME_WEBSITE="http://duply.net"
 
 # default config values
