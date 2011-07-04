@@ -419,6 +419,9 @@ DUPL_VARS_GLOBAL="TMPDIR='$TEMP_DIR' \
 }
 
 function process_conf { # convert shell variables to the duplicity arguments
+  if [ -n "$FTPLCFG" ]; then
+    DUPL_PARAMS="$DUPL_PARAMS --name $FTPLCFG "
+  fi
   if [ -n "$TIME_SEPARATOR" ]; then
     DUPL_PARAMS="$DUPL_PARAMS --time-separator $DPL_TIME_SEPARATOR "
   fi
