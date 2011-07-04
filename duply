@@ -426,14 +426,14 @@ function process_conf { # convert shell variables to the duplicity arguments
     DUPL_PARAMS="$DUPL_PARAMS --short-filenames "
   fi
   if [ -n "$MAX_FULLBKP_AGE" ]; then
-    DUPL_PARAMS="$DUPL_PARAMS --full-if-older-than \$MAX_FULLBKP_AGE " 
+    DUPL_PARAMS="$DUPL_PARAMS --full-if-older-than $MAX_FULLBKP_AGE " 
   fi
   if [ -n "$ARCHIVE_DIR" ]; then
     DUPL_PARAMS="$DUPL_PARAMS --archive-dir $ARCHIVE_DIR "
     mkdir -p "$ARCHIVE_DIR"
   fi
   if [ -n "$VOLSIZE" ]; then
-    DUPL_PARAMS="$DUPL_PARAMS --volsize \$VOLSIZE "
+    DUPL_PARAMS="$DUPL_PARAMS --volsize $VOLSIZE "
   fi
   if [ -n "$EXTRA_DUPL_PARAMS" ]; then
     DUPL_PARAMS="$DUPL_PARAMS $EXTRA_DUPL_PARAMS " 
