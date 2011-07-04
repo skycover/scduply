@@ -35,3 +35,10 @@ file:///blah/blah/NAME and the backup will be named NAME
 * ARCHIVE_DIR FOR DUPLICITY
 
 Support for --archive-dir
+
+* BKPALL COMMAND
+
+scduply bkpall
+
+Will execute "scduply NAME incr" for all profiles, found in CONFHOME
+File "skip" in the particular profile will skip it from the mass operation

@@ -117,6 +117,8 @@ COMMANDS:
               full - if parameter full_if_older matches 
                      or no earlier backup is found
               incremental - in all other cases
+  bkpall:    sequentally execute backup for all profiles
+              if profile has the file "skip" it will be skipped
   bkp:       as above but without executing pre/post scripts
   full:      force full backup
   incr:      force incremental backup
@@ -635,6 +637,18 @@ Hint:
       exit 1
     else
       create_config
+      exit 0
+    fi
+    ;;
+  bkpall)
+    set_config
+    if [ -n "$CONFHOME" ]; then
+      for i in "$CONFHOME"/*; do
+	if [ -d "$i" -a -f "$i/conf" -a ! -f "$i/skip" ]; then
+          T="${i##*/}"
+	  $ME_LONG $T backup
+	fi
+      done
       exit 0
     fi
     ;;
