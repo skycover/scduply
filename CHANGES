@@ -14,6 +14,12 @@ variables.
 
 So it's now ok to source two global and profile's configs sequentally.
 
+* SEPARATE INIT COMMAND
+
+"scduply init" - will create the top configuration folder and the global
+config.  This is not mandatory and is also automatically invoked upon
+"scduply ... create"
+
 * SOURCE separated to the file
 
 Backup source ($SOURCE) is now separated to the file "source", because now
