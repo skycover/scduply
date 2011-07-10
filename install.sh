@@ -11,10 +11,10 @@ else
 fi
 echo install to $target
 mkdir -p $target
+cp scduply "$target"
 if [ -n "$2" ]; then
   mtarget="$2"
+  echo install man to $mtarget
+  mkdir -p $mtarget
+  cp scduply.1 "$mtarget"
 fi
-echo install man to $mtarget
-mkdir -p $mtarget
-cp scduply "$target"
-cp scduply.1 "$mtarget"
