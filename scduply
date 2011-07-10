@@ -112,14 +112,16 @@ DESCRIPTION:
              
 COMMANDS:
   usage:     get usage help text
+  init:      creates a top configuration folder and global config
+             not mandatory - is also invoked upon "create"
   create:    creates a configuration profile
   backup:    backup with pre/post script execution (batch: pre_bkp_post),
               full - if parameter full_if_older matches 
                      or no earlier backup is found
               incremental - in all other cases
-  bkpall:    sequentally execute backup for all profiles
-              if profile has the file "skip" it will be skipped
   bkp:       as above but without executing pre/post scripts
+  bkpall:    sequentally execute backup for all profiles
+              if profile has the file "skip", it will be skipped
   full:      force full backup
   incr:      force incremental backup
   list [<age>]:      

@@ -146,6 +146,10 @@ only \fItest\fR.
 .IP "\fBusage\fR" 8
 .IX Item "usage"
 Get usage help text.
+.IP "\fBinit\fR" 8
+.IX Item "init"
+Creates a top configuration folder and a global config.
+It is not mandatory, because is also invoked upon "create" command.
 .IP "\fBcreate\fR" 8
 .IX Item "create"
 Creates a configuration profile.
@@ -163,6 +167,10 @@ as \fIincremental\fR backup in all other cases.
 .IP "\fBbkp\fR" 8
 .IX Item "bkp"
 As above but without executing pre/post scripts.
+.IP "\fBbkpall\fR" 8
+.IX Item "bkpall"
+Sequentally execute backup for all profiles.
+If profile has the file "skip", it will be skipped.
 .IP "\fBfull\fR" 8
 .IX Item "full"
 Force full backup.
