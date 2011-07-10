@@ -2,6 +2,8 @@
 #
 ###############################################################################
 #  scduply is ScyCover duply extension. http://github.com/skycover/scduply/   #
+#  (c) 2011 Dmitry Chernyak (scduply)                                         #
+#                                                                             #
 #  duply (grown out of ftplicity), is a shell front end to duplicity that     #
 #  simplifies the usage by managing settings for each backup job in profiles. #
 #  It supports executing multiple commands in a batch mode to enable single   #
@@ -11,7 +13,6 @@
 #  See http://duply.net or http://ftplicity.sourceforge.net/ for more info.   #
 #  (c) 2006 Christiane Ruetten, Heise Zeitschriften Verlag, Germany           #
 #  (c) 2008-2010 Edgar Soldin (changes since version 1.3)                     #
-#  (c) 2011 Dmitry Chernyak (scduply)                                         #
 ###############################################################################
 #  LICENSE:                                                                   #
 #  This program is licensed under GPLv2.                                      #
