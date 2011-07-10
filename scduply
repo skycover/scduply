@@ -267,6 +267,21 @@ EOF
 fi
 }
 
+function init {
+  if [ -n "$CONFHOME" -a ! -f "$MAINCONF" ]; then
+    write_config "$CONFHOME" "$MAINCONF"
+    # Hints on first usage
+    cat <<EOF
+
+*** The scduply initialized in '$CONFHOME'.
+The initial global config file is '$MAINCONF'.
+
+EOF
+  else
+    echo The scduply is already initialized in $CONFHOME
+  fi
+}
+
 function create_config {
   if [ -n "$CONFHOME" -a ! -f "$MAINCONF" ]; then
     write_config "$CONFHOME" "$MAINCONF"
@@ -625,6 +640,11 @@ case "$cmd" in
     usage_info
     exit 0
     ;;	
+  init)
+    set_config
+    init
+    exit 0
+    ;;
   create)
     set_config
     if [ -d $CONFDIR ]; then
