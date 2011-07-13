@@ -728,7 +728,7 @@ else
   . "$CONF"
   process_conf
   if [ -f "$SRCHOLDER" ]; then
-    SOURCE="`head -1 $SRCHOLDER`"
+    SOURCE="'`head -1 $SRCHOLDER`'"
   fi
   KEYFILE="${KEYFILE//.asc/${GPG_KEY:+.$GPG_KEY}.asc}"
   TEMP_DIR=${TEMP_DIR:-'/tmp'}
