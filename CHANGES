@@ -38,6 +38,11 @@ $TARGET's suffix.
 So if the TARGET is file:///blah/blah, then the actual target folder will be
 file:///blah/blah/NAME and the backup will be named NAME
 
+* TARGET SUBDIRECTORY SPECIFICATION
+
+The option "--in-target PATH" will add PATH to the TARGET just after the NAME
+Useful for differential backups supported by external file manipulations.
+
 * ARCHIVE_DIR FOR DUPLICITY
 
 Support for --archive-dir

@@ -152,6 +152,7 @@ COMMANDS:
 OPTIONS:
   --force:   passed to duplicity (see commands: purge, purge-full, cleanup)
   --preview: do nothing but print out generated duplicity command lines
+  --in-target PATH: PATH will be added to the end of the target, after the backup's NAME
 
 $(hint_profile)
 
@@ -1038,10 +1039,17 @@ fi
 
 # process params
 for param in "$@" ; do
+  if [ -n "$VALUE_EXP" ]; then
+    eval $VALUE_EXP="$param"
+    VALUE_EXP=''
+  fi
   case "$param" in
     # enable ftplicity preview mode
     '--preview')
       PREVIEW=1
+      ;;
+    '--in-target')
+      VALUE_EXP='IN_TARGET'
       ;;
     *)
       if [ `echo "$param" | grep -e "^-"` ] || \
@@ -1056,6 +1064,11 @@ for param in "$@" ; do
       ;;
   esac
 done
+
+# Add in-target path to the target's hostpath
+if [ -n "$IN_TARGET" ]; then
+  TARGET_URL_HOSTPATH="$TARGET_URL_HOSTPATH/$IN_TARGET"
+fi
 
 # defined TARGET_USER&PASS vars replace their URL pendants 
 # (double defs already dealt with)
