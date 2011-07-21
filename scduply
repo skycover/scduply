@@ -499,18 +499,21 @@ function process_conf { # convert shell variables to the duplicity arguments
 function save_log {
   # Create directory for duplicity logs
   mkdir -p $LOG_DIR
-  STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest|tail -1|awk -F"\." '{print $(NF-1)}'`
-  ls $ARCHIVE_DIR/$NAME/*.manifest
-  LOG_NAME="$LOG_DIR/duplicity-log.$STAMP.gz"
-  STATUS_NAME="$LOG_DIR/duplicity-status.$STAMP"
-  echo $STAMP : $NAME : $LOG_NAME
+  if [ "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
+    STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest|tail -1|awk -F"\." '{print $(NF-1)}'`
+    LOG_NAME="$LOG_DIR/duplicity-log.$STAMP.gz"
+    STATUS_NAME="$LOG_DIR/duplicity-status.$STAMP"
+  else
+    STAMP=`date +%Y%m%d%H%M`
+    LOG_NAME="$LOG_DIR/duplicity-cmdlog-$cmd.$STAMP.gz"
+  fi
   if [ -f "$LOG_NAME" ]; then
     echo Duplicate log entry "$LOG_NAME". Saving as is.
     mv "$TEMP_LOG" "$LOG_DIR"
   else
     gzip -c "$TEMP_LOG" >"$LOG_NAME"
     rm $TEMP_LOG
-    echo "$ERR" >"$STATUS_NAME"
+    if [ -n "$STATUS_NAME" ]; then echo "$ERR" >"$STATUS_NAME"; fi
   fi
 }
 
