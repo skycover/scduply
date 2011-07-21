@@ -42,6 +42,8 @@ function set_config { # sets config vars
   local CONFHOME_ETC_COMPAT="/etc/ftplicity"
   local CONFHOME_ETC="/etc/scduply"
   CONFHOME="$HOME/.scduply"
+  ARCHIVE_DIR="$HOME/.cache/duplicity"
+  LOG_DIR="$CONFHOME/log"
 
   # confdir can be delivered as path (must contain /)
   if [ `echo $FTPLCFG | grep /` ] ; then 
@@ -49,7 +51,8 @@ function set_config { # sets config vars
     CONFDIR=$(readlink -f $FTPLCFG 2>/dev/null || \
               ( echo $FTPLCFG|grep -v '^/' 1>/dev/null 2>&1 \
                && echo $(pwd)/${FTPLCFG} ) || \
-              echo ${FTPLCFG})          
+              echo ${FTPLCFG})
+    LOG_DIR="$CONFDIR/log"
   # or DEFAULT in home/.duply folder (NEW)
   elif [ -d "${CONFHOME}" ]; then
     CONFDIR="${CONFHOME}/${FTPLCFG}"
@@ -62,6 +65,8 @@ function set_config { # sets config vars
   elif [ -d "${CONFHOME_ETC}" ] && [ "$EUID" -eq 0 ]; then
     CONFHOME="${CONFHOME_ETC}"
     CONFDIR="${CONFHOME_ETC}/${FTPLCFG}"
+    LOG_DIR="/var/log/scduply"
+    ARCHIVE_DIR="/var/cache/scduply"
   # root can keep profiles under /etc/ftplicity (OLD) if path exists
   elif [ -d "${CONFHOME_ETC_COMPAT}" ] && [ "$EUID" -eq 0 ]; then
     CONFHOME="${CONFHOME_ETC_COMPAT}"
@@ -83,7 +88,9 @@ function set_config { # sets config vars
   SRCHOLDER="$CONFDIR/source"
   KEYFILE="$CONFDIR/gpgkey.asc"
   SAVED_ENV="$CONFDIR/saved.env"
-  
+  if [ -n "$CONFHOME" ]; then
+    LOG_DIR=$LOG_DIR/$NAME
+  fi
 }
 
 function version_info { # print version information
@@ -262,6 +269,11 @@ function write_config {
 # sets duplicity cache dir for local signature and manifest files
 # activates --archive-dir option
 #ARCHIVE_DIR=/var/cache/duply
+
+# sets directory where duplicity logs are going
+# default is ~/.scduply/logs for local installation
+# and /var/log/scduply for system-wide installation
+# LOG_DIR="/var/log/scduply/\$NAME"
 
 # more duplicity command line options can be added in the following way
 # don't forget to leave a separating space char at the end
@@ -484,8 +496,27 @@ function process_conf { # convert shell variables to the duplicity arguments
   fi
 }
 
+function save_log {
+  # Create directory for duplicity logs
+  mkdir -p $LOG_DIR
+  STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest|tail -1|awk -F"\." '{print $(NF-1)}'`
+  ls $ARCHIVE_DIR/$NAME/*.manifest
+  LOG_NAME="$LOG_DIR/duplicity-log.$STAMP.gz"
+  STATUS_NAME="$LOG_DIR/duplicity-status.$STAMP"
+  echo $STAMP : $NAME : $LOG_NAME
+  if [ -f "$LOG_NAME" ]; then
+    echo Duplicate log entry "$LOG_NAME". Saving as is.
+    mv "$TEMP_LOG" "$LOG_DIR"
+  else
+    gzip -c "$TEMP_LOG" >"$LOG_NAME"
+    rm $TEMP_LOG
+    echo "$ERR" >"$STATUS_NAME"
+  fi
+}
+
 function duplify { # the actual wrapper function
   local PARAMSNOW DUPL_CMD DUPL_PARAMS=${DUPL_PARAMS}
+  TEMP_LOG=`mktemp scduply.log.XXXXXXXXXX`
 
   # put command (with params) first in duplicity parameters
   for param in "$@" ; do
@@ -505,9 +536,11 @@ function duplify { # the actual wrapper function
 
   eval ${PREVIEW:+echo \"} ${DUPL_VARS_GLOBAL} ${BACKEND_PARAMS} \
   $DUPLICITY $DUPL_CMD $DUPL_PARAMS_GLOBAL \
-  $DUPL_PARAMS ${PREVIEW:+\"}
+  $DUPL_PARAMS ${PREVIEW:+\"} >$TEMP_LOG
 
   local ERR=$?
+  cat $TEMP_LOG
+  save_log
   return $ERR
 }
 

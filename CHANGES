@@ -47,6 +47,19 @@ Useful for differential backups supported by external file manipulations.
 
 Support for --archive-dir
 
+* STORING DUPLICITY LOG AND STATUS
+
+LOG_DIR is
+ ~/.scduply/log/$NAME - when the config is in ~/.scduply
+ /var/log/scduply - when the config is in /etc/scduply
+ CONF_DIR - when the config is passed directly to scduply
+
+After backup the theese files are stored:
+ duplicity-log.TIMESTAMP.gz - the compressed log
+ duplicity-status.TIMESTAMP - the duplicity exit code
+
+LOG_DIR is not purged automatically (TODO).
+
 * BKPALL COMMAND
 
 scduply bkpall
