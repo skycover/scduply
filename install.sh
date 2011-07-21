@@ -14,6 +14,8 @@ mkdir -p $target
 cp scduply "$target"
 if [ -n "$2" ]; then
   mtarget="$2"
+fi
+if [ -n "$mtarget" ]; then
   echo install man to $mtarget
   mkdir -p $mtarget
   cp scduply.1 "$mtarget"
