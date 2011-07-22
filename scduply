@@ -539,7 +539,7 @@ function duplify { # the actual wrapper function
 
   eval ${PREVIEW:+echo \"} ${DUPL_VARS_GLOBAL} ${BACKEND_PARAMS} \
   $DUPLICITY $DUPL_CMD $DUPL_PARAMS_GLOBAL \
-  $DUPL_PARAMS ${PREVIEW:+\"} >$TEMP_LOG
+  $DUPL_PARAMS ${PREVIEW:+\"} >$TEMP_LOG 2>&1
 
   local ERR=$?
   cat $TEMP_LOG
