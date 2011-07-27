@@ -520,6 +520,8 @@ function save_log {
 function duplify { # the actual wrapper function
   local PARAMSNOW DUPL_CMD DUPL_PARAMS=${DUPL_PARAMS}
   TEMP_LOG=`mktemp scduply.log.XXXXXXXXXX`
+  tail -f $TEMP_LOG &
+  pstail="$!"
 
   # put command (with params) first in duplicity parameters
   for param in "$@" ; do
@@ -542,7 +544,7 @@ function duplify { # the actual wrapper function
   $DUPL_PARAMS ${PREVIEW:+\"} >$TEMP_LOG 2>&1
 
   local ERR=$?
-  cat $TEMP_LOG
+  kill $pstail >/dev/null 2>&1
   save_log
   return $ERR
 }
