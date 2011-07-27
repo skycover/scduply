@@ -519,7 +519,7 @@ function save_log {
 
 function duplify { # the actual wrapper function
   local PARAMSNOW DUPL_CMD DUPL_PARAMS=${DUPL_PARAMS}
-  TEMP_LOG=`mktemp scduply.log.XXXXXXXXXX`
+  TEMP_LOG=`mktemp $TEMP_DIR/scduply.log.XXXXXXXXXX`
   tail -f $TEMP_LOG &
   pstail="$!"
 
