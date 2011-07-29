@@ -497,16 +497,37 @@ function process_conf { # convert shell variables to the duplicity arguments
   fi
 }
 
+# If the operation is backup, then we'll save log.gz and status
+#  And we will find timestamp from the last manifest's name
+#  But if there is no manifest or there already was a log for
+#   the last manifest (the backup was failed), so we will write
+#   log.err.gz and status.err with simple datetime
+# For other commands we will save cmdlog-[cmd].gz
+# If something goes wrong and either logfile already exists,
+#  we will copy temporary log as is to the log dir    
 function save_log {
   # Create directory for duplicity logs
   mkdir -p $LOG_DIR
+  TSTAMP=`date +%Y%m%d%H%M`
   if [ "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
-    STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest|tail -1|awk -F"\." '{print $(NF-1)}'`
-    LOG_NAME="$LOG_DIR/duplicity-log.$STAMP.gz"
-    STATUS_NAME="$LOG_DIR/duplicity-status.$STAMP"
+    # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
+    STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest 2>/dev/null|tail -1|awk -F"." '
+/duplicity-full/{print $(NF-1)}
+/duplicity-inc/{print $(NF-3)".to."$(NF-1)}
+'`
+    if [ -n "$STAMP" ]; then
+      LOG_NAME="$LOG_DIR/duplicity-log.$STAMP.gz"
+      STATUS_NAME="$LOG_DIR/duplicity-status.$STAMP"
+      if [ -f "$LOG_NAME" ]; then
+        LOG_NAME="$LOG_DIR/duplicity-log.err.$TSTAMP.gz"
+        STATUS_NAME="$LOG_DIR/duplicity-status.err.$TSTAMP"
+      fi
+    else
+      LOG_NAME="$LOG_DIR/duplicity-log.err.$TSTAMP.gz"
+      STATUS_NAME="$LOG_DIR/duplicity-status.err.$TSTAMP"
+    fi
   else
-    STAMP=`date +%Y%m%d%H%M`
-    LOG_NAME="$LOG_DIR/duplicity-cmdlog-$cmd.$STAMP.gz"
+    LOG_NAME="$LOG_DIR/duplicity-cmdlog-$cmd.$TSTAMP.gz"
   fi
   if [ -f "$LOG_NAME" ]; then
     echo Duplicate log entry "$LOG_NAME". Saving as is.
