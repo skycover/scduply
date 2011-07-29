@@ -35,6 +35,7 @@ DEFAULT_TARGET_USER='_backend_username_'
 DEFAULT_TARGET_PASS='_backend_password_'
 DEFAULT_GPG_KEY='_KEY_ID_'
 DEFAULT_GPG_PW='_GPG_PASSWORD_'
+SCDW='scdw'
 
 # function definitions ##########################
 function set_config { # sets config vars
@@ -761,10 +762,20 @@ elif [ ! -r "$CONF" ] ; then
   error "'$CONF' not readable."
 else
   # pre-read main config if any
-  if [ -n "$CONFHOME" -a -f "$MAINCONF" ]; then
-    . "$MAINCONF"
+  if [ -n "$CONFHOME" ]; then
+    if [ -f "$MAINCONF.$SCDW" ]; then
+      . "$MAINCONF.$SCDW"
+    fi
+    if [ -f "$MAINCONF" ]; then
+      . "$MAINCONF"
+    fi
   fi
-  . "$CONF"
+  if [ -f "$CONF.$SCDW" ]; then
+    . "$CONF.$SCDW"
+  fi
+  if [ -f "$CONF" ]; then
+    . "$CONF"
+  fi
   process_conf
   if [ -f "$SRCHOLDER" ]; then
     SOURCE="'`head -1 $SRCHOLDER`'"
