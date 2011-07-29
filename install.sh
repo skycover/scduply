@@ -6,7 +6,7 @@ if [ -z "$1" ]; then
 elif [ -d "$1" ]; then
   target="$1"
 else
-  echo "Usage $0 'install-path' [man-path]"
+  echo "Usage $0 ['install-path' [man-path]]"
   exit 1
 fi
 echo install to $target
