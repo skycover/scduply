@@ -54,9 +54,13 @@ LOG_DIR is
  /var/log/scduply - when the config is in /etc/scduply
  CONF_DIR - when the config is passed directly to scduply
 
-After backup the theese files are stored:
+After backup operations the theese files are stored:
  duplicity-log.TIMESTAMP.gz - the compressed log
  duplicity-status.TIMESTAMP - the duplicity exit code
+ duplicity-log.err.TIMESTAMP.gz - the error log if there was no new  manifest
+
+After other commands the log created of form:
+ duplicity-cmdlog-COMMAND.TIMESTAMP.gz
 
 LOG_DIR is not purged automatically (TODO).
 
@@ -66,3 +70,10 @@ scduply bkpall
 
 Will execute "scduply NAME incr" for all profiles, found in CONFHOME
 File "skip" in the particular profile will skip it from the mass operation
+
+* GUI-GENERATED CONFIG
+
+To support GIU frontends like SCDW, the global and local files "conf.scdw"
+are readed before global and local configs respectively.
+
+Note, that manual changes in "conf" files will take precedence.
