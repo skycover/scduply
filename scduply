@@ -508,7 +508,7 @@ function process_conf { # convert shell variables to the duplicity arguments
 function save_log {
   # Create directory for duplicity logs
   mkdir -p $LOG_DIR
-  TSTAMP=`date +%Y%m%d%H%M`
+  TSTAMP=`date +%Y%m%dT%H%M%SZ`
   if [ "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
     # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
     STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest 2>/dev/null|tail -1|awk -F"." '
