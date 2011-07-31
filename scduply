@@ -464,7 +464,12 @@ function duplicity_params_global {
 		local DUPL_ARG_ENC=${GPG_PW:+"PASSPHRASE='$GPG_PW'"} && \
 		local GPG_OPTS=${GPG_OPTS:+"--gpg-options '${GPG_OPTS}'"}
 
-        # XXX skipped check for duplicity version
+	duplicity --help|grep -q -- --help
+	if [ $? -gt 0 ]; then
+		echo "Your version of duplicity doesn't accept '--name' option"
+		echo "Please upgrade"
+		exit 1
+	fi
 	local DUPL_NAME="--name '${NAME}'"
 
 DUPL_PARAMS_GLOBAL="${DUPL_NAME} ${DUPL_PARAM_ENC} \
