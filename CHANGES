@@ -77,3 +77,8 @@ To support GIU frontends like SCDW, the global and local files "conf.scdw"
 are readed before global and local configs respectively.
 
 Note, that manual changes in "conf" files will take precedence.
+
+* FAILED PRE SCRIPT CAUSE EXIT
+
+No backup action or other processing takes place if 'pre' script returns
+non-zero code.

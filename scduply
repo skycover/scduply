@@ -447,6 +447,7 @@ function run_script { # run pre/post scripts
   	OUT=`. "$SCRIPT" 2>&1`; ERR=$?
   	[ $ERR -eq "0" ] && echo "- OK" || echo "- FAILED (code $ERR)"
   	echo -en ${OUT:+"Output: $OUT\n"} ;
+	(exit $ERR)
   else
     echo "Skipping n/a script '$SCRIPT'."
   fi
@@ -1272,6 +1273,8 @@ fi
 
 separator "Finished state $(error_to_string $CMD_ERR) at $(date_from_nsecs $RUN_END) - \
 Runtime $(printf "%02d:%02d:%02d.%03d" $((RUNTIME/1000000000/60/60)) $((RUNTIME/1000000000/60%60)) $((RUNTIME/1000000000%60)) $((RUNTIME/1000000%1000)) )"
+
+[ "$cmd" = "pre" -a $CMD_ERR -gt 0 ] && exit $CMD_ERR
 
 done
 
