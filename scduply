@@ -276,6 +276,12 @@ function write_config {
 # and /var/log/scduply for system-wide installation
 # LOG_DIR="/var/log/scduply/\$NAME"
 
+# sets default path under TARGET dir
+# this component will be added after NAME component
+# can be overriden with --in-target
+# 'cur' is the setting compatible with SkyCover Backup rotation scheme
+#IN_TARGET='cur'
+
 # more duplicity command line options can be added in the following way
 # don't forget to leave a separating space char at the end
 #EXTRA_DUPL_PARAMS=""
