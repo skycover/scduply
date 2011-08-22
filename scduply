@@ -1100,12 +1100,12 @@ cat <<EOF >$SAVED_ENV
 # This file is automatically created so while you backup the profile
 # you will save security credentials even if they are set in the global config
 
-SAVED_NAME=$NAME
-SAVED_GPG_KEY=$GPG_KEY
-SAVED_GPG_PW=$GPG_PW
-SAVED_TARGET=$TARGET
-SAVED_TARGET_USER=$TARGET_USER
-SAVED_TARGET_PASS=$TARGET_PASS
+SAVED_NAME='$NAME'
+SAVED_GPG_KEY='$GPG_KEY'
+SAVED_GPG_PW='$GPG_PW'
+SAVED_TARGET='$TARGET'
+SAVED_TARGET_USER='$TARGET_USER'
+SAVED_TARGET_PASS='$TARGET_PASS'
 EOF
 
 # export key if not already #############################################################
