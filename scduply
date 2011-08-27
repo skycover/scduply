@@ -521,7 +521,7 @@ function save_log {
   # Create directory for duplicity logs
   mkdir -p $LOG_DIR
   TSTAMP=`date +%Y%m%dT%H%M%SZ`
-  if [ "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
+  if [ "$cmd" = "backup" -o "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
     # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
     STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest 2>/dev/null|tail -1|awk -F"." '
 /duplicity-full/{print $(NF-1)}
@@ -545,6 +545,7 @@ function save_log {
     echo Duplicate log entry "$LOG_NAME". Saving as is.
     mv "$TEMP_LOG" "$LOG_DIR"
   else
+    echo gzipping "$TEMP_LOG" to "$LOG_NAME"
     gzip -c "$TEMP_LOG" >"$LOG_NAME"
     rm $TEMP_LOG
     if [ -n "$STATUS_NAME" ]; then echo "$ERR" >"$STATUS_NAME"; fi
@@ -553,11 +554,6 @@ function save_log {
 
 function duplify { # the actual wrapper function
   local PARAMSNOW DUPL_CMD DUPL_PARAMS=${DUPL_PARAMS}
-  TEMP_LOG=`mktemp $TEMP_DIR/scduply.log.XXXXXXXXXX`
-  if [ "$OSTYPE" != "cygwin" ]; then
-    tail -f $TEMP_LOG &
-    pstail="$!"
-  fi
 
   # put command (with params) first in duplicity parameters
   for param in "$@" ; do
@@ -577,16 +573,7 @@ function duplify { # the actual wrapper function
 
   eval ${PREVIEW:+echo \"} ${DUPL_VARS_GLOBAL} ${BACKEND_PARAMS} \
   $DUPLICITY $DUPL_CMD $DUPL_PARAMS_GLOBAL \
-  $DUPL_PARAMS ${PREVIEW:+\"} >$TEMP_LOG 2>&1
-
-  local ERR=$?
-  if [ "$OSTYPE" != "cygwin" ]; then
-    kill $pstail >/dev/null 2>&1
-  else
-    cat $TEMP_LOG
-  fi
-  save_log
-  return $ERR
+  $DUPL_PARAMS ${PREVIEW:+\"}
 }
 
 function secureconf { # secure the configuration dir
@@ -826,6 +813,13 @@ else
     TARGET_PASS="${TARGET_PW}"
   fi
 fi
+if [ -z "$TEMP_LOG" ]; then
+	TEMP_LOG=`mktemp $TEMP_DIR/scduply.log.XXXXXXXXXX`
+	export TEMP_LOG
+	echo Writing log $TEMP_LOG
+fi
+
+{
 echo "Using profile '$CONFDIR'."
 
 # secure config dir, if needed w/ warning
@@ -1289,5 +1283,8 @@ Runtime $(printf "%02d:%02d:%02d.%03d" $((RUNTIME/1000000000/60/60)) $((RUNTIME/
 [ "$cmd" = "pre" -a $CMD_ERR -gt 0 ] && exit $CMD_ERR
 
 done
+} 2>&1 | tee -a $TEMP_LOG
+
+save_log
 
 exit ${FTPL_ERR}
