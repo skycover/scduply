@@ -509,6 +509,113 @@ function process_conf { # convert shell variables to the duplicity arguments
   fi
 }
 
+dupl_report_keys="ElapsedTime|SourceFiles|SourceFileSize|NewFiles|NewFileSize|DeletedFiles|ChangedFiles|ChangedFileSize|ChangedDeltaSize|DeltaEntries|RawDeltaSize|TotalDestinationSizeChange|Errors"
+
+function report_html_head {
+  cat <<EOF
+<html><head>
+EOF
+}
+
+function report_html_body {
+  cat <<EOF
+</head>
+<body>
+  <table>
+EOF
+}
+
+function report_html_trail {
+  cat <<EOF
+  </table>
+</body>
+</html>
+EOF
+}
+
+function report_html_css {
+  cat <<EOF
+  <style type=text/css>table { border-spacing: 0px 0px; border-collapse: collapse; border-color: gray; }</style>
+  <style type=text/css>th, td { padding: 0.1em 0.2em; border: 1px solid; border-color: gray; }</style>
+  <style type=text/css>th { text-align: left; }</style>
+  <style type=text/css>td { text-align: center; }</style>
+  <style type=text/css>td.OK { background: #00ff00; } td.FAILED { background: red; } td.JOB { font-weight: bold; }</style>
+EOF
+}
+
+function report_html_table {
+  awk '
+BEGIN{
+ # no STAMP here
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'",keys,"|")
+}
+/^JOB: /{
+  profile=$2
+  p[i++]=profile
+}
+/^STAMP: /{
+  n=split($2,m,".")
+  s2=m[n]
+  d=substr(s2,1,4)"-"substr(s2,5,2)"-"substr(s2,7,2)" "substr(s2,10,2)":"substr(s2,12,2)":"substr(s2,14,2)" GMT"
+  d="date +\"%F %T\" --date=\"" d "\""
+  d|getline df
+  $2=df
+}
+/[^ ]*: /{
+  gsub(":","",$1)
+  res[profile,$1]=$2
+}
+END{
+  for(s=1; s<=nkeys; s++){
+    printf("<tr><th>%s</th>", keys[s])
+    for(j=0; j<i; j++){
+      v=res[p[j],keys[s]]
+      style=v
+      if(s==1)style="JOB"
+      else if((keys[s]=="Errors")&&v)style="FAILED"
+      printf("<td class=%s>%s</td>", style, v)
+    }
+    printf("\n</tr>\n")
+  }
+}
+' $*
+}
+
+# parse backup log
+# produce textual summary
+# syntax: parse_log logfile [log timestamp]
+function parse_log {
+  awk -vstamp="$2" '
+BEGIN{
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'",keys,"|")
+}
+/^Using profile /{
+  split($3, m, "'"'"'")
+  profile=m[2]
+  nsize=split(profile,n,"/")
+  res["JOB"]=n[nsize]
+  res["STAMP"]=stamp
+  stage="NONE"
+}
+/^--- Start running command /{
+  stage=$5
+}
+/^--- Finished state /{
+  res[stage]=$4
+}
+/^('"$dupl_report_keys"')/{
+  res[$1]=$2
+  # simply comment out to switch human form off
+  if(split($0,h,"[()]")>1) res[$1]=h[2]
+}
+END{
+  for(s=1; s<=nkeys; s++){
+    print keys[s] ": " res[keys[s]]
+  }
+}
+' $1
+}
+
 # If the operation is backup, then we'll save log.gz and status
 #  And we will find timestamp from the last manifest's name
 #  But if there is no manifest or there already was a log for
@@ -528,16 +635,21 @@ function save_log {
 /duplicity-inc/{print $(NF-3)".to."$(NF-1)}
 '`
     if [ -n "$STAMP" ]; then
-      LOG_NAME="$LOG_DIR/duplicity-log.$STAMP.gz"
-      STATUS_NAME="$LOG_DIR/duplicity-status.$STAMP"
+      echo Backup STAMP is $STAMP
+      SUFFIX="ok.$STAMP"
+      # XXX the mistake is possible if:
+      # the last log wasn't written due to error/interrupt after a successful backup
+      # the new backup wasn't succeeded and no new duplicity log was written
+      # probably we should remember the log name before the backup and compare at this time
       if [ -f "$LOG_NAME" ]; then
-        LOG_NAME="$LOG_DIR/duplicity-log.err.$TSTAMP.gz"
-        STATUS_NAME="$LOG_DIR/duplicity-status.err.$TSTAMP"
+        SUFFIX="err.$TSTAMP"
       fi
     else
-      LOG_NAME="$LOG_DIR/duplicity-log.err.$TSTAMP.gz"
-      STATUS_NAME="$LOG_DIR/duplicity-status.err.$TSTAMP"
+      SUFFIX="err.$TSTAMP"
     fi
+    LOG_NAME="$LOG_DIR/duplicity-log.$SUFFIX.gz"
+    STATUS_NAME="$LOG_DIR/duplicity-status.$SUFFIX"
+    REPORT_NAME="$LOG_DIR/duplicity-report.$SUFFIX"
   else
     LOG_NAME="$LOG_DIR/duplicity-cmdlog-$cmd.$TSTAMP.gz"
   fi
@@ -545,9 +657,11 @@ function save_log {
     echo Duplicate log entry "$LOG_NAME". Saving as is.
     mv "$TEMP_LOG" "$LOG_DIR"
   else
+    echo produce report in "$REPORT_NAME"
+    parse_log "$TEMP_LOG" "$SUFFIX" >"$REPORT_NAME"
     echo gzipping "$TEMP_LOG" to "$LOG_NAME"
     gzip -c "$TEMP_LOG" >"$LOG_NAME"
-    rm $TEMP_LOG
+    rm "$TEMP_LOG"
     if [ -n "$STATUS_NAME" ]; then echo "$ERR" >"$STATUS_NAME"; fi
   fi
 }
@@ -731,6 +845,12 @@ Hint:
     ;;
   bkpall)
     set_config
+    TEMP_DIR=${TEMP_DIR:-'/tmp'}
+    TEMP_LOG=`mktemp $TEMP_DIR/bkpall.log.XXXXXXXXXX`
+    TEMP_REPORT=`mktemp $TEMP_DIR/bkpall.rep.XXXXXXXXXX`
+    TSTAMP=`date +%Y%m%dT%H%M%SZ`
+    echo Writing log $TEMP_LOG
+    {
     if [ -n "$CONFHOME" ]; then
       for i in "$CONFHOME"/*; do
 	if [ -d "$i" -a -f "$i/conf" -a ! -f "$i/skip" ]; then
@@ -738,8 +858,25 @@ Hint:
 	  $ME_LONG $T backup
 	fi
       done
-      exit 0
     fi
+    } 2>&1 | tee -a $TEMP_LOG
+    reports=`awk '/^produce report in /{print $NF}' $TEMP_LOG`
+    echo BKPALL report in $TEMP_REPORT
+    report_html_head >$TEMP_REPORT
+    report_html_css >>$TEMP_REPORT
+    report_html_body >>$TEMP_REPORT
+    report_html_table $reports >>$TEMP_REPORT
+    report_html_trail >>$TEMP_REPORT
+    #parse_log $TEMP_LOG >$TEMP_REPORT
+    #if [ -n "$MAIL" ]; then
+    #  send_mail $TEMP_REPORT
+    #fi
+    # we'll save combined logs for better usability from the shell
+    #echo gzipping "$TEMP_LOG" to "$LOG_NAME"
+    #gzip -c "$TEMP_LOG" >"$LOG_NAME"
+    #mv $TEMP_REPORT $REPORT_NAME
+    #rm $TEMP_LOG
+    exit 0
     ;;
   *)
     # if we reach here, user either forgot profile or chose wrong profileless command
