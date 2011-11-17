@@ -279,8 +279,7 @@ function write_config {
 # sets default path under TARGET dir
 # this component will be added after NAME component
 # can be overriden with --in-target
-# 'cur' is the setting compatible with SkyCover Backup rotation scheme
-#IN_TARGET='cur'
+#IN_TARGET=''
 
 # more duplicity command line options can be added in the following way
 # don't forget to leave a separating space char at the end
