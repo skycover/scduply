@@ -286,6 +286,12 @@ function write_config {
 # don't forget to leave a separating space char at the end
 #EXTRA_DUPL_PARAMS=""
 
+# mailing settings to send bkpall report and log
+#MAIL_FROM=root
+#MAIL_TO=root
+#MAIL_SUBJECT="scduply backup results"
+#MAIL_CMD="/usr/sbin/sendmail -i -t"
+
 EOF
 fi
 }
@@ -509,6 +515,37 @@ function process_conf { # convert shell variables to the duplicity arguments
   fi
 }
 
+function send_mail {
+ if [ -n "$MAIL_FROM" -o -n "$MAIL_TO" -o -n "$MAIL_CMD" ]; then
+   TEMP_MAIL=`mktemp $TEMP_DIR/bkpall.mail.XXXXXXXXXX`
+   echo Mailing $TEMP_MAIL
+   hostname=`hostname`
+   boundary=`date +$hostname-scduply-%Y%m%d%H%M%S%z`
+   cat <<EOF >$TEMP_MAIL
+From: $MAIL_FROM
+To: $MAIL_TO
+Date: `date +"%a, %d %b %Y %T %z"`
+Subject: $MAIL_SUBJECT
+MIME-Version: 1.0
+Content-Type: multipart/mime; boundary=$boundary
+
+--$boundary
+Content-Type: text/html; charset=utf-8
+
+`cat $1`
+
+--$boundary
+Content-Type: text/plain; charset=utf-8
+
+`cat $2`
+
+--$boundary--
+EOF
+   $MAIL_CMD <$TEMP_MAIL
+   rm $TEMP_MAIL
+ fi
+}
+
 dupl_report_keys="ElapsedTime|SourceFiles|SourceFileSize|NewFiles|NewFileSize|DeletedFiles|ChangedFiles|ChangedFileSize|ChangedDeltaSize|DeltaEntries|RawDeltaSize|TotalDestinationSizeChange|Errors"
 
 function report_html_head {
@@ -657,8 +694,10 @@ function save_log {
     echo Duplicate log entry "$LOG_NAME". Saving as is.
     mv "$TEMP_LOG" "$LOG_DIR"
   else
-    echo produce report in "$REPORT_NAME"
-    parse_log "$TEMP_LOG" "$SUFFIX" >"$REPORT_NAME"
+    if [ -n "$REPORT_NAME"  ]; then
+      echo produce report in "$REPORT_NAME"
+      parse_log "$TEMP_LOG" "$SUFFIX" >"$REPORT_NAME"
+    fi
     echo gzipping "$TEMP_LOG" to "$LOG_NAME"
     gzip -c "$TEMP_LOG" >"$LOG_NAME"
     rm "$TEMP_LOG"
@@ -844,11 +883,19 @@ Hint:
     fi
     ;;
   bkpall)
+    export LC_ALL=C
     set_config
+    if [ -n "$CONFHOME" ]; then
+      if [ -f "$MAINCONF.$SCDW" ]; then
+	. "$MAINCONF.$SCDW"
+      fi
+      if [ -f "$MAINCONF" ]; then
+	. "$MAINCONF"
+      fi
+    fi
     TEMP_DIR=${TEMP_DIR:-'/tmp'}
     TEMP_LOG=`mktemp $TEMP_DIR/bkpall.log.XXXXXXXXXX`
     TEMP_REPORT=`mktemp $TEMP_DIR/bkpall.rep.XXXXXXXXXX`
-    TSTAMP=`date +%Y%m%dT%H%M%SZ`
     echo Writing log $TEMP_LOG
     {
     if [ -n "$CONFHOME" ]; then
@@ -867,15 +914,8 @@ Hint:
     report_html_body >>$TEMP_REPORT
     report_html_table $reports >>$TEMP_REPORT
     report_html_trail >>$TEMP_REPORT
-    #parse_log $TEMP_LOG >$TEMP_REPORT
-    #if [ -n "$MAIL" ]; then
-    #  send_mail $TEMP_REPORT
-    #fi
-    # we'll save combined logs for better usability from the shell
-    #echo gzipping "$TEMP_LOG" to "$LOG_NAME"
-    #gzip -c "$TEMP_LOG" >"$LOG_NAME"
-    #mv $TEMP_REPORT $REPORT_NAME
-    #rm $TEMP_LOG
+    send_mail $TEMP_REPORT $TEMP_LOG
+    rm $TEMP_LOG $TEMP_REPORT
     exit 0
     ;;
   *)
