@@ -575,7 +575,7 @@ function report_html_css {
   <style type=text/css>th, td { padding: 0.1em 0.2em; border: 1px solid; border-color: gray; }</style>
   <style type=text/css>th { text-align: left; }</style>
   <style type=text/css>td { text-align: center; }</style>
-  <style type=text/css>td.OK { background: #00ff00; } td.FAILED { background: red; } td.JOB { font-weight: bold; }</style>
+  <style type=text/css>td.OK { background: #00ff00; } td.FAILED { background: red; } td.WARNING { background: yellow; } td.JOB { font-weight: bold; }</style>
 EOF
 }
 
@@ -583,7 +583,7 @@ function report_html_table {
   awk '
 BEGIN{
  # no STAMP here
- nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'|Warnings",keys,"|")
 }
 /^JOB: /{
   profile=$2
@@ -606,9 +606,11 @@ END{
     printf("<tr><th>%s</th>", keys[s])
     for(j=0; j<i; j++){
       v=res[p[j],keys[s]]
-      style=v
+      style=keys[s]
       if(s==1)style="JOB"
+      else if(keys[s]~/^(PRE|BKP|POST)$/)style=v
       else if((keys[s]=="Errors")&&v)style="FAILED"
+      else if((keys[s]=="Warnings")&&v)style="WARNING"
       printf("<td class=%s>%s</td>", style, v)
     }
     printf("\n</tr>\n")
@@ -623,7 +625,7 @@ END{
 function parse_log {
   awk -vstamp="$2" '
 BEGIN{
- nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'|Warnings",keys,"|")
 }
 /^Using profile /{
   split($3, m, "'"'"'")
@@ -643,6 +645,9 @@ BEGIN{
   res[$1]=$2
   # simply comment out to switch human form off
   if(split($0,h,"[()]")>1) res[$1]=h[2]
+}
+/^Warning/{
+  res["Warnings"]++
 }
 END{
   for(s=1; s<=nkeys; s++){
