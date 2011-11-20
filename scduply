@@ -633,6 +633,7 @@ BEGIN{
   nsize=split(profile,n,"/")
   res["JOB"]=n[nsize]
   res["STAMP"]=stamp
+  res["Warnings"]=0
   stage="NONE"
 }
 /^--- Start running command /{
