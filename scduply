@@ -644,8 +644,6 @@ BEGIN{
 }
 /^('"$dupl_report_keys"')/{
   res[$1]=$2
-  # simply comment out to switch human form off
-  if(split($0,h,"[()]")>1) res[$1]=h[2]
 }
 /^Warning/{
   res["Warnings"]++
