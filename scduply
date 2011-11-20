@@ -602,10 +602,18 @@ BEGIN{
   res[profile,$1]=$2
 }
 END{
+  k=1024
+  M=k*1024
+  G=M*1024
   for(s=1; s<=nkeys; s++){
     printf("<tr><th>%s</th>", keys[s])
     for(j=0; j<i; j++){
       v=res[p[j],keys[s]]
+      if(keys[s]~/Size/){
+        if(sprintf("%f",v/G) !~ /^0\./)v=sprintf("%.2f G", v/G)
+        else if(sprintf("%f",v/M) !~ /^0\./)v=sprintf("%.2f M", v/M)
+        else if(sprintf("%f",v/k) !~ /^0\./)v=sprintf("%.2f k", v/k)
+      }
       style=keys[s]
       if(s==1)style="JOB"
       else if(keys[s]~/^(PRE|BKP|POST)$/)style=v
