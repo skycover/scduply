@@ -49,17 +49,17 @@ SkyCover Backup service-side rotaion scheme requires IN_TARGET='cur' in config.
 
 Support for --archive-dir
 
-* STORING DUPLICITY LOG AND STATUS
+* STORING DUPLICITY LOG, STATUS AND SUMMARY
 
 LOG_DIR is
  ~/.scduply/log/$NAME - when the config is in ~/.scduply
  /var/log/scduply - when the config is in /etc/scduply
  CONF_DIR - when the config is passed directly to scduply
 
-After backup operations the theese files are stored:
- duplicity-log.TIMESTAMP.gz - the compressed log
- duplicity-status.TIMESTAMP - the duplicity exit code
- duplicity-log.err.TIMESTAMP.gz - the error log if there was no new  manifest
+After the backup operations theese files are stored:
+ duplicity-log.(ok|err).TIMESTAMP.gz - the compressed log
+ duplicity-status.(ok|err).TIMESTAMP - the duplicity exit code
+ duplicity-report.(ok|err).TIMESTAMP - the log summary report
 
 After other commands the log created of form:
  duplicity-cmdlog-COMMAND.TIMESTAMP.gz
@@ -72,6 +72,10 @@ scduply bkpall
 
 Will execute "scduply NAME incr" for all profiles, found in CONFHOME
 File "skip" in the particular profile will skip it from the mass operation
+
+If the global config file has defined MAIL_FROM, MAIL_TO, MAIL_CMD and
+MAIL_SUBJECT, then the report will be mailed.
+The report will include the HTML summary for all jobs and the raw log.
 
 * GUI-GENERATED CONFIG
 
