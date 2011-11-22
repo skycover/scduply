@@ -516,7 +516,7 @@ function process_conf { # convert shell variables to the duplicity arguments
 
 function send_mail {
  if [ -n "$MAIL_FROM" -o -n "$MAIL_TO" -o -n "$MAIL_CMD" ]; then
-   TEMP_MAIL=`mktemp $TEMP_DIR/bkpall.mail.XXXXXXXXXX`
+   TEMP_MAIL=`mktemp $TEMP_DIR/scduply.mail.XXXXXXXXXX`
    echo Mailing $TEMP_MAIL
    hostname=`hostname`
    boundary=`date +$hostname-scduply-%Y%m%d%H%M%S%z`
