@@ -583,7 +583,7 @@ function report_html_table {
   awk '
 BEGIN{
  # no STAMP here
- nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors|OtherProblems",keys,"|")
 }
 /^JOB: /{
   profile=$2
@@ -628,6 +628,7 @@ END{
       else if((keys[s]=="Errors")&&v)style="FAILED"
       else if((keys[s]=="LogWarnings")&&v)style="WARNING"
       else if((keys[s]=="LogErrors")&&v)style="FAILED"
+      else if((keys[s]=="OtherProblems")&&v)style="FAILED"
       printf("<td class=%s>%s</td>", style, v)
     }
     printf("\n</tr>\n")
@@ -642,7 +643,7 @@ END{
 function parse_log {
   awk -vstamp="$2" '
 BEGIN{
- nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors|OtherProblems",keys,"|")
 }
 /^Using profile /{
   split($3, m, "'"'"'")
@@ -667,13 +668,14 @@ BEGIN{
 /^Warning/{
   res["LogWarnings"]++
 }
-/^Error /{
+/^Error/{
   res["LogErrors"]++
 }
 /forcing full backup/{
   res["TYPE"]="FULL"
 }
 END{
+  res["LogErrors"]=res["LogErrors"]-res["Errors"]-1
   for(s=1; s<=nkeys; s++){
     print keys[s] ": " res[keys[s]]
   }
@@ -701,6 +703,7 @@ function save_log {
   mkdir -p $LOG_DIR
   TSTAMP=`date +%Y%m%dT%H%M%SZ`
   if [ "$cmd" = "backup" -o "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
+    IS_PROBLEM=0
     # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
     STAMP=`find_last_stamp`
     if [ -n "$STAMP" ]; then
@@ -724,6 +727,7 @@ function save_log {
       # XXX suppose there will be no race here :)
       SUFFIX="err.$TSTAMP"
       LOG_NAME="$LOG_DIR/duplicity-log.$SUFFIX.gz"
+      IS_PROBLEM=1
     fi
     echo Backup SUFFIX is $SUFFIX
 
@@ -731,6 +735,7 @@ function save_log {
     REPORT_NAME="$LOG_DIR/duplicity-report.$SUFFIX"
     echo produce report in "$REPORT_NAME"
     parse_log "$TEMP_LOG" "$SUFFIX" >"$REPORT_NAME"
+    echo "OtherProblems: $IS_PROBLEM" >>"$REPORT_NAME"
     echo "$ERR" >"$STATUS_NAME"
   else
     LOG_NAME="$LOG_DIR/duplicity-cmdlog-$cmd.$TSTAMP.gz"
