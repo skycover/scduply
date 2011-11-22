@@ -686,10 +686,10 @@ function save_log {
   TSTAMP=`date +%Y%m%dT%H%M%SZ`
   if [ "$cmd" = "backup" -o "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
     # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
-    STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest 2>/dev/null|tail -1|awk -F"." '
+    STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest 2>/dev/null|awk -F"." '
 /duplicity-full/{print $(NF-1)}
 /duplicity-inc/{print $(NF-3)".to."$(NF-1)}
-'`
+'|sort|tail -1`
     if [ -n "$STAMP" ]; then
       echo Backup STAMP is $STAMP
       SUFFIX="ok.$STAMP"
@@ -710,7 +710,7 @@ function save_log {
     LOG_NAME="$LOG_DIR/duplicity-cmdlog-$cmd.$TSTAMP.gz"
   fi
   if [ -f "$LOG_NAME" ]; then
-    echo Duplicate log entry "$LOG_NAME". Saving as is.
+    echo Duplicate log entry "$LOG_NAME". Saving as `basename "$TEMP_LOG"`.
     mv "$TEMP_LOG" "$LOG_DIR"
   else
     if [ -n "$REPORT_NAME"  ]; then
