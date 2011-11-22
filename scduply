@@ -676,6 +676,13 @@ END{
 ' $1
 }
 
+function find_last_stamp {
+  ls $ARCHIVE_DIR/$NAME/*.manifest 2>/dev/null|awk -F"." '
+/duplicity-full/{print $(NF-1)}
+/duplicity-inc/{print $(NF-3)".to."$(NF-1)}
+'|sort|tail -1
+}
+
 # If the operation is backup, then we'll save log.gz and status
 #  And we will find timestamp from the last manifest's name
 #  But if there is no manifest or there already was a log for
@@ -690,42 +697,46 @@ function save_log {
   TSTAMP=`date +%Y%m%dT%H%M%SZ`
   if [ "$cmd" = "backup" -o "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
     # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
-    STAMP=`ls $ARCHIVE_DIR/$NAME/*.manifest 2>/dev/null|awk -F"." '
-/duplicity-full/{print $(NF-1)}
-/duplicity-inc/{print $(NF-3)".to."$(NF-1)}
-'|sort|tail -1`
+    STAMP=`find_last_stamp`
     if [ -n "$STAMP" ]; then
-      echo Backup STAMP is $STAMP
-      SUFFIX="ok.$STAMP"
-      # XXX the mistake is possible if:
-      # the last log wasn't written due to error/interrupt after a successful backup
-      # the new backup wasn't succeeded and no new duplicity log was written
-      # probably we should remember the log name before the backup and compare at this time
-      if [ -f "$LOG_NAME" ]; then
-        SUFFIX="err.$TSTAMP"
+      # XXX the programing mistakes are possible in the last log detection
+      # we has remember the log name before the backup and comparing at this time
+      if [ "$STAMP" = "$OLD_STAMP" ]; then
+        echo Warning: The last found manifest stamped with $STAMP was not changed
+      else
+        SUFFIX="ok.$STAMP"
+        LOG_NAME="$LOG_DIR/duplicity-log.$SUFFIX.gz"
+        if [ -f "$LOG_NAME" ]; then
+          echo Warning: The log $LOG_NAME already exists
+          SUFFIX=""
+        fi
       fi
     else
+      echo Warning: No stamped manifests found
       SUFFIX="err.$TSTAMP"
     fi
-    LOG_NAME="$LOG_DIR/duplicity-log.$SUFFIX.gz"
+    if [ -z "$SUFFIX" ]; then
+      # XXX suppose there will be no race here :)
+      SUFFIX="err.$TSTAMP"
+      LOG_NAME="$LOG_DIR/duplicity-log.$SUFFIX.gz"
+    fi
+    echo Backup SUFFIX is $SUFFIX
+
     STATUS_NAME="$LOG_DIR/duplicity-status.$SUFFIX"
     REPORT_NAME="$LOG_DIR/duplicity-report.$SUFFIX"
+    echo produce report in "$REPORT_NAME"
+    parse_log "$TEMP_LOG" "$SUFFIX" >"$REPORT_NAME"
+    echo "$ERR" >"$STATUS_NAME"
   else
     LOG_NAME="$LOG_DIR/duplicity-cmdlog-$cmd.$TSTAMP.gz"
-  fi
-  if [ -f "$LOG_NAME" ]; then
-    echo Duplicate log entry "$LOG_NAME". Saving as `basename "$TEMP_LOG"`.
-    mv "$TEMP_LOG" "$LOG_DIR"
-  else
-    if [ -n "$REPORT_NAME"  ]; then
-      echo produce report in "$REPORT_NAME"
-      parse_log "$TEMP_LOG" "$SUFFIX" >"$REPORT_NAME"
+    if [ -f "$LOG_NAME" ]; then
+      echo Warning: The log $LOG_NAME already exists
+      LOG_NAME=$LOG_DIR/`basename "$TEMP_LOG"`.
     fi
-    echo gzipping "$TEMP_LOG" to "$LOG_NAME"
-    gzip -c "$TEMP_LOG" >"$LOG_NAME"
-    rm "$TEMP_LOG"
-    if [ -n "$STATUS_NAME" ]; then echo "$ERR" >"$STATUS_NAME"; fi
   fi
+  echo gzipping "$TEMP_LOG" to "$LOG_NAME"
+  gzip -c "$TEMP_LOG" >"$LOG_NAME"
+  rm "$TEMP_LOG"
 }
 
 function duplify { # the actual wrapper function
@@ -1018,6 +1029,8 @@ if [ -z "$TEMP_LOG" ]; then
 	export TEMP_LOG
 	echo Writing log $TEMP_LOG
 fi
+
+OLD_STAMP=`find_last_stamp`
 
 {
 echo "Using profile '$CONFDIR'."
