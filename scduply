@@ -583,7 +583,7 @@ function report_html_table {
   awk '
 BEGIN{
  # no STAMP here
- nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|Warnings",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors",keys,"|")
 }
 /^JOB: /{
   profile=$2
@@ -626,7 +626,8 @@ END{
       if(s==1)style="JOB"
       else if(keys[s]~/^(PRE|BKP|POST)$/)style=v
       else if((keys[s]=="Errors")&&v)style="FAILED"
-      else if((keys[s]=="Warnings")&&v)style="WARNING"
+      else if((keys[s]=="LogWarnings")&&v)style="WARNING"
+      else if((keys[s]=="LogErrors")&&v)style="FAILED"
       printf("<td class=%s>%s</td>", style, v)
     }
     printf("\n</tr>\n")
@@ -641,7 +642,7 @@ END{
 function parse_log {
   awk -vstamp="$2" '
 BEGIN{
- nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|Warnings",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors",keys,"|")
 }
 /^Using profile /{
   split($3, m, "'"'"'")
@@ -649,7 +650,8 @@ BEGIN{
   nsize=split(profile,n,"/")
   res["JOB"]=n[nsize]
   res["STAMP"]=stamp
-  res["Warnings"]=0
+  res["LogWarnings"]=0
+  res["LogErrors"]=0
   res["TYPE"]="INC"
   stage="NONE"
 }
@@ -663,7 +665,10 @@ BEGIN{
   res[$1]=$2
 }
 /^Warning/{
-  res["Warnings"]++
+  res["LogWarnings"]++
+}
+/^Error /{
+  res["LogErrors"]++
 }
 /forcing full backup/{
   res["TYPE"]="FULL"
