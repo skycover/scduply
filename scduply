@@ -583,7 +583,7 @@ function report_html_table {
   awk '
 BEGIN{
  # no STAMP here
- nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'|Warnings",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|Warnings",keys,"|")
 }
 /^JOB: /{
   profile=$2
@@ -641,7 +641,7 @@ END{
 function parse_log {
   awk -vstamp="$2" '
 BEGIN{
- nkeys=split("JOB|STAMP|PRE|BKP|POST|'"$dupl_report_keys"'|Warnings",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|Warnings",keys,"|")
 }
 /^Using profile /{
   split($3, m, "'"'"'")
@@ -650,6 +650,7 @@ BEGIN{
   res["JOB"]=n[nsize]
   res["STAMP"]=stamp
   res["Warnings"]=0
+  res["TYPE"]="INC"
   stage="NONE"
 }
 /^--- Start running command /{
@@ -663,6 +664,9 @@ BEGIN{
 }
 /^Warning/{
   res["Warnings"]++
+}
+/forcing full backup/{
+  res["TYPE"]="FULL"
 }
 END{
   for(s=1; s<=nkeys; s++){
