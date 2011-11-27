@@ -1,18 +1,21 @@
 #!/bin/bash
 #
 ###############################################################################
-#  scduply is ScyCover duply extension. http://github.com/skycover/scduply/   #
+#  scduply is the duply fork by SkyCover Company                              #
+#  http://github.com/skycover/scduply/                                        #
 #  (c) 2011 Dmitry Chernyak (scduply)                                         #
 #                                                                             #
-#  duply (grown out of ftplicity), is a shell front end to duplicity that     #
-#  simplifies the usage by managing settings for each backup job in profiles. #
-#  It supports executing multiple commands in a batch mode to enable single   #
-#  line cron entries and executes pre/post backup scripts.                    #
-#  Since version 1.5.0 all duplicity backends are supported. Hence the name   #
-#  changed from ftplicity to duply.                                           #
-#  See http://duply.net or http://ftplicity.sourceforge.net/ for more info.   #
+#  duply is a shell front end to duplicity                                    #
+#  http://duply.net or http://ftplicity.sourceforge.net/                      #
 #  (c) 2006 Christiane Ruetten, Heise Zeitschriften Verlag, Germany           #
 #  (c) 2008-2010 Edgar Soldin (changes since version 1.3)                     #
+#                                                                             #
+#  Simplifies the usage by managing settings for each backup job in profiles. #
+#  It supports executing multiple commands in a batch mode to enable single   #
+#  line cron entries, executes pre/post backup scripts and produces HTML      #
+#  reports.                                                                   #
+#  Since version 1.5.0 all duplicity backends are supported. Hence the name   #
+#  changed from ftplicity to duply.                                           #
 ###############################################################################
 #  LICENSE:                                                                   #
 #  This program is licensed under GPLv2.                                      #
@@ -25,8 +28,8 @@
 ME_LONG="$0"
 ME="$(basename $0)"
 ME_NAME="${ME%%.*}"
-ME_VERSION="1.5.2.3-sc.1.1"
-ME_WEBSITE="http://github.com/skycover/scduply/"
+ME_VERSION="1.5.2.3-sc.1.2"
+ME_WEBSITE="http://en.skycover.ru/opensource/scduply/"
 
 # default config values
 DEFAULT_SOURCE='/path/of/source'
@@ -108,29 +111,53 @@ VERSION:
 $(version_info)
   
 DESCRIPTION: 
-  Duply deals as a wrapper for the mighty duplicity magic.
+  SkyCover Duply (scuply) deals as a wrapper for the mighty duplicity magic.
   It simplifies running duplicity with cron or on command line.
 
-  first time usage (profile creation):
-    $ME <profile> create
-  
-  general usage in single or batch mode (see EXAMPLES)
+  First time setup:
+    $ME init
+    This writes the general config file in /etc/scduply/ (if pre-exists)
+    or otherwise in the ~/.scduply/
+    Edit 'conf' file to setup at least TARGET and GPG_PW
+
+  General usage for specific profile:
     $ME <profile> <command>[_<command>_...] [<options> ...]
-    
+
   Non $ME options are passed on to duplicity (see OPTIONS).
+
+  Create profile:
+    $ME <profile> create
+    Fill out at least 'source' and possibly 'exclude' files in the
+    profile's folder
+  
+  Backup the single profile:
+    $ME <profile> backup
+
+  Restore the backup to the DESTINATION as it was 4 days ago
+    $ME <profile> restore DESTINATION 4D --file-to-restore some/folder
+
+  Restore subfolder 'some/folder' as it was 4 days ago to the DESTINATION
+    $ME <profile> fetch some/folder DESTINATION 4D
+    
+  Backup all profiles at once:
+    $ME bkpall
+    Fill the MAIL_* settings in the global config to receive nice reports
              
-COMMANDS:
+GENEGAL COMMANDS:
   usage:     get usage help text
   init:      creates a top configuration folder and global config
              not mandatory - is also invoked upon "create"
+  bkpall:    sequentally execute backup for all profiles
+              if profile has the file "skip", it will be skipped;
+              email the report if MAIL_* settings are globally set.
+
+COMMANDS FOR SPECIFIED PROFILE:
   create:    creates a configuration profile
   backup:    backup with pre/post script execution (batch: pre_bkp_post),
               full - if parameter full_if_older matches 
                      or no earlier backup is found
               incremental - in all other cases
   bkp:       as above but without executing pre/post scripts
-  bkpall:    sequentally execute backup for all profiles
-              if profile has the file "skip", it will be skipped
   full:      force full backup
   incr:      force incremental backup
   list [<age>]:      
