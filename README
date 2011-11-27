@@ -1,8 +1,5 @@
-scduply - SkyCover Duply extension. http://github.com/skycover/scduply/
-(c) 2011 Dmitry Chernyak (scduply)
-
-scduply is the tool for managing dedicated server's backups via the
-configuration files and simple commands.
+SkyCover Duply (scduply) is the tool for managing dedicated
+server's backups via the configuration files and simple commands.
 
 * Using Duplicity (http://duplicity.nongnu.org) as the backend.
 * Based on the code of duply (http://duply.net/) but is advanced
@@ -15,6 +12,16 @@ configuration files and simple commands.
 * Saves the backup logs, create and mail HTML reports.
 
 The project's page is: http://en.skycover.ru/opensource/scduply
+
+COPYRIGHT:
+scduply is the fork of duply made by SkyCover Company
+http://github.com/skycover/scduply/
+(c) 2011 Dmitry Chernyak, SkyCover Company
+
+duply is a shell front end to duplicity
+http://duply.net or http://ftplicity.sourceforge.net/
+(c) 2006 Christiane Ruetten, Heise Zeitschriften Verlag, Germany
+(c) 2008-2010 Edgar Soldin (changes since version 1.3)
 
 LICENSE:
 This program is licensed under GPLv2.
