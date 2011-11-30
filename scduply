@@ -141,7 +141,7 @@ DESCRIPTION:
     
   Backup all profiles at once:
     $ME bkpall
-    Fill the MAIL_* settings in the global config to receive nice reports
+    Fill the MAIL_* settings in the global configuration file for receiving the nice reports
              
 GENEGAL COMMANDS:
   usage:     get usage help text

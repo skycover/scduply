@@ -61,82 +61,102 @@
 .\}
 .\" ========================================================================
 .\"
-.IX Title "DUPLY 1"
-.TH DUPLY 1 "2010-01-07" "Version 1.5.1.4" "duply documentation"
+.IX Title "SCDUPLY 1"
+.TH SCDUPLY 1 "2011-11-30" "Version 1.5.2.3-sc.1.2" "scduply documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-duply \- a shell frontend to duplicity for simplified backups
+scduply \- a shell frontend to duplicity for simplified backups
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-\&\fBduply\fR \fIprofile\fR \fBcreate\fR
+\&\fBscduply\fR \fBinit\fR
 .PP
-\&\fBduply\fR \fIprofile command [options ...]\fR
+\&\fBscduply\fR \fIprofile\fR \fBcreate\fR
 .PP
-\&\fBduply\fR \fIprofile command[_command_...] [options ...]\fR
+\&\fBscduply\fR \fIprofile command [options ...]\fR
+.PP
+\&\fBscduply\fR \fIprofile command[_command_...] [options ...]\fR
+.PP
+\&\fBscduply\fR \fBbkpall\fR
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-\&\fBDuply\fR deals as a wrapper for the mighty duplicity magic.
-It simplifies running duplicity with cron or on command line by:
-  \- keeping settings in profiles per backup job 
-  \- enabling batch actions eg. backup_verify_purge
-  \- executing pre/post scripts
-  \- precondition checking for flawless duplicity operation
+\&\fBSkyCover Duply (scduply)\fR deals as a wrapper for the mighty
+duplicity magic.
+It simplifies confiruring and running duplicity with cron or on command line:
+  \- Permits to define the new backup job in few seconds.
+  \- Simplifies the tuning for file inclusions and exclusions.
+  \- User friendly, clear syntax of config files.
+  \- Able to execute and check pre- and post-job scripts.
+  \- Gives useful commands for backup and restore.
+  \- Saves the backup logs, create and mail HTML reports.
 .PP
 For each backup job one configuration profile must be created.
-The profile folder will be stored under \fI~/.duply/<profile\fR>
+The profile folder will be stored under \fI~/.scduply/<profile\fR>
 (where '~' is the current users home directory).
 .PP
-\&\fIHint\fR: If the folder \fI/etc/duply\fR exists the profiles for the super 
+\&\fIHint\fR: If the folder \fI/etc/scduply\fR exists the profiles for the super 
 user root will be searched and created there.
 .SH "USAGE"
 .IX Header "USAGE"
-First time usage (profile creation):
+Initialization.
+The global config file \fI~/.scduply/conf\fR will be created
 .PP
 .Vb 1
-\&    duply <profile> create
+\&    scduply init
+.Ve
+.PP
+The backup job profile creation.
+.PP
+.Vb 1
+\&    scduply <profile> create
+.Ve
+.PP
+Execute all jobs, generate report
+.PP
+.Vb 1
+\&    scduply bkpall
 .Ve
 .PP
 General usage in single mode (see \s-1EXAMPLES\s0):
 .PP
 .Vb 1
-\&    duply <profile> <command> [<options> ...]
+\&    scduply <profile> <command> [<options> ...]
 .Ve
 .PP
 General usage in batch mode joining commands with '_' (see \s-1EXAMPLES\s0):
 .PP
 .Vb 1
-\&    duply <profile> <command1>_<command2>[_<command3>...] [<options> ...]
+\&    scduply <profile> <command1>_<command2>[_<command3>...] [<options> ...]
 .Ve
 .PP
-Non duply options are passed on to duplicity (see \s-1OPTIONS\s0).
+Non scduply options are passed on to duplicity (see \s-1OPTIONS\s0).
 .SH "PROFILE"
 .IX Header "PROFILE"
 .SS "location for profiles"
 .IX Subsection "location for profiles"
 Indicated by a profile name i.e. \fIsample\fR, which is resolved to 
-\&\fI~/.duply/sample\fR ('~' expands to environment variable \f(CW$HOME\fR).
+\&\fI~/.scduply/sample\fR ('~' expands to environment variable \f(CW$HOME\fR).
 .PP
-Superuser root can place profiles under \fI/etc/duply\fR if the
-folder is manually created before running duply.
+Superuser root can place profiles under \fI/etc/scduply\fR if the
+folder is manually created before running scduply.
 .PP
-\&\s-1ATTENTION:\s0 If \fI/etc/duply/\fR is created, old profiles under \fI/root/.duply/\fR
+\&\s-1ATTENTION:\s0 If \fI/etc/scduply/\fR is created, old profiles under \fI/root/.scduply/\fR
 have to be moved manually to the former or will cease to work.
 .SS "using profiles"
 .IX Subsection "using profiles"
 Usually only the profile name will be used:
 .PP
 .Vb 1
-\&    duply humbug backup
+\&    scduply humbug backup
 .Ve
 .PP
 Alternatively a \fIpath\fR might be used. This might be useful for quick testing, 
-restoring or exotic locations. Shell expansion should work as usual:
+restoring or exotic locations. The global configuration file in this case will not be used. Shell expansion should work as usual:
 .PP
 .Vb 1
-\&    duply ~/.duply/humbug backup
+\&    scduply ~/.scduply/humbug backup
 .Ve
 .PP
 \&\s-1ATTENTION:\s0 The path must contain at least one '/', e.g \fI./test\fR instead of
@@ -149,10 +169,10 @@ Get usage help text.
 .IP "\fBinit\fR" 8
 .IX Item "init"
 Creates a top configuration folder and a global config.
-It is not mandatory, because is also invoked upon "create" command.
+It is not mandatory, because is also invoked with the first "create" command.
 .IP "\fBcreate\fR" 8
 .IX Item "create"
-Creates a configuration profile.
+Creates a configuration profile for the particular backup job.
 .IP "\fBbackup\fR" 8
 .IX Item "backup"
 Backup with pre/post script execution (as batch the same as: pre_bkp_post)
@@ -218,64 +238,94 @@ Passed to duplicity (see commands: purge, purge-full, cleanup).
 Do nothing but print out generated duplicity command lines.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
+Init scduply:
+.PP
+.Vb 1
+\&    scduply init
+.Ve
+.PP
+  and then edit the resulting \fI~/.scduply/conf\fR file. You'll should to set at least TARGET and GPG_PW.
+.PP
 Create profile 'humbug':
 .PP
 .Vb 1
-\&    duply humbug create
+\&    scduply humbug create
 .Ve
 .PP
-and then edit the resulting \fIconf\fR file of this profile.
+  and then edit at least \fIsource\fR and possible \fIexclude\fR files in \fI~/.scduply/humburg/\fR.
+  The rules for the \fIexclude\fR file can be found in \fIman duplicity\fR, section \s-1FILE\s0 \s-1SELECTION\s0). In short:
+      \- /absolute/path    \- exclude the file
+      \+ /absolute/path    \- include the file
+      \- **                \- exclude all (place this on the last row)
 .PP
 Backup 'humbug' now:
 .PP
 .Vb 1
-\&    duply humbug backup
+\&    scduply humbug backup
 .Ve
+.PP
+  you'll get the copy of the resulting logs and reports in \fI~/.scduply/log/humburg/\fR
+(or in \fI/var/log/scduply/humburg\fR if scduply was configured in \fI/etc/scduply\fR).
 .PP
 List available backup sets of profile 'humbug':
 .PP
 .Vb 1
-\&    duply humbug status
+\&    scduply humbug status
 .Ve
 .PP
 List and delete obsolete backup archives of 'humbug':
 .PP
 .Vb 1
-\&    duply humbug purge \-\-force
+\&    scduply humbug purge \-\-force
 .Ve
 .PP
 Restore latest backup of 'humbug' to /mnt/restore:
 .PP
 .Vb 1
-\&    duply humbug restore /mnt/restore
+\&    scduply humbug restore /mnt/restore
 .Ve
 .PP
 Restore /etc/passwd of 'humbug' from 4 days ago to /root/pw:
 .PP
 .Vb 1
-\&    duply humbug fetch etc/passwd /root/pw 4D
+\&    scduply humbug fetch etc/passwd /root/pw 4D
 .Ve
 .PP
-See \fIman duplicity\fR, section \s-1TIME\s0 \s-1FORMATS\s0 for the time format.
+  See \fIman duplicity\fR, section \s-1TIME\s0 \s-1FORMATS\s0 for the time format.
+.PP
+Backup all profiles at once:
+.PP
+.Vb 1
+\&    scduply bkpall
+.Ve
+.PP
+  Create the file \fI.skip\fR in the profile to exclude it from bkpall operation.
+  Fill the MAIL_* settings in the global configuration file for receiving the nice reports.
 .PP
 A one line \fIbatch job\fR on 'humbug' for cron execution:
 .PP
 .Vb 1
-\&    duply humbug backup_verify_purge \-\-force
+\&    scduply humbug backup_verify_purge \-\-force
 .Ve
 .SH "FILES"
 .IX Header "FILES"
-Files in the profile folder(~/.duply/<profile>):
+Files in the profile folder(~/.scduply/<profile>):
 .PP
 .Vb 5
 \&  conf .......... main configuration file
 \&  pre ........... executed before a backup
 \&  post .......... executed after a backup
 \&  gpgkey.*.asc .. exported GPG key file(s)
+\&  saved.env ..... exported settings (possible from the global config), which will be needed for restoring
 \&  exclude ....... a globbing list of included or excluded files/folders
 .Ve
 .PP
 The rules for the \fIexclude\fR file can be found in \fIman duplicity\fR, section \s-1FILE\s0 \s-1SELECTION\s0).
+.PP
+Logs:
+.PP
+The logs are placed in the \fI~/.scduply/log/<profile>\fR and are normally named with the timestamps of corresponding backups.
+If the configuration is placed in \fI/etc/scduply\fR then the logs will go to \fI/var/log/scduply/<profile>\fR, but this may be configured.
 .SH "IMPORTANT"
 .IX Header "IMPORTANT"
 Copy the \fIwhole\fR profile folder after the first backup to a safe place.
@@ -289,13 +339,14 @@ options are crucial for restoration.
 .SH "BUGS"
 .IX Header "BUGS"
 This program is still in development. If you find bugs write a bug report on:
-  http://sourceforge.net/projects/ftplicity/.
+  http://redmine.skycover.ru/projects/scduply-backup/.
 .SH "AVAILABILITY"
 .IX Header "AVAILABILITY"
-For newer versions see http://sourceforge.net/projects/ftplicity/.
+For newer versions see http://github.com/skycover/scduply/.
 .SH "COPYRIGHT and LICENSE"
 .IX Header "COPYRIGHT and LICENSE"
-Copyright (C) 2006 Christiane Ruetten, 2008\-2010 Edgar Soldin
+Copyright (C) 2006 Christiane Ruetten, 2008\-2010 Edgar Soldin,
+2011 Dmitry Chernyak
 .PP
 This package is free software; you can redistribute it and/or modify
 it under the terms of the \s-1GNU\s0 General Public License version 2 as
@@ -305,10 +356,11 @@ On Debian systems, the complete text of the \s-1GNU\s0 General
 Public License version 2 can be found in `/usr/share/common\-licenses/GPL\-2'.
 .SH "AUTHOR"
 .IX Header "AUTHOR"
+SkyCover Duply (scduply) is the Duply's fork made by Dmitry Chernyak.
 Duply was written by Christiane Ruetten and Edgar Soldin.
 .PP
-This manual page was written by Joachim Wiedorn <ad_debian at joonet.de>
-for the Debian project (and may be used by others).
+This manual page was initially written by Joachim Wiedorn <ad_debian at joonet.de>
+for duply and was revised for scduply by Dmitry Chernyak.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fIduplicity\fR\|(1)
