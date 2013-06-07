@@ -25,6 +25,7 @@
 
 # important definitions #######################################################
 
+export PYTHONIOENCODING=utf-8
 ME_LONG="$0"
 ME="$(basename $0)"
 ME_NAME="${ME%%.*}"
