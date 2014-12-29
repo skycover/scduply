@@ -483,10 +483,10 @@ function run_script { # run pre/post scripts
     echo "Skipped executing '$CMD' in preview mode"
   elif [ -r "$SCRIPT" ] ; then 
   	echo -n "Running '$SCRIPT' "
-  	OUT=`. "$SCRIPT" 2>&1`; ERR=$?
+	source "$SCRIPT" 2>&1
+	ERR=$?
   	[ $ERR -eq "0" ] && echo "- OK" || echo "- FAILED (code $ERR)"
-  	echo -en ${OUT:+"Output: $OUT\n"} ;
-	(exit $ERR)
+  	(exit $ERR)
   else
     echo "Skipping n/a script '$SCRIPT'."
   fi
