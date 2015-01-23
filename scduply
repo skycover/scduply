@@ -568,6 +568,8 @@ Content-Type: text/plain; charset=utf-8
 
 --$boundary--
 EOF
+	grep -i -v -E '^Copying.*to local cache..$' $TEMP_MAIL
+	grep -i -v -E '^gid.*not in range.' $TEMP_MAIL
    $MAIL_CMD <$TEMP_MAIL
    rm $TEMP_MAIL
  fi
