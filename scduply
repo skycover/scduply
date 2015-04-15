@@ -318,11 +318,9 @@ function write_config {
 #MAIL_TO=root
 #MAIL_SUBJECT="scduply backup results"
 #MAIL_CMD="/usr/sbin/sendmail -i -t"
-# threshold of TDSC 
-#TDSC_warning=120
 # send message if warning or error
 # 0 - only errors, 1 - warnings and errors, 2 - everything
-#MAIL_VERBOSE=1
+#MAIL_VERBOSE=2
 EOF
 fi
 }
@@ -548,7 +546,8 @@ function process_conf { # convert shell variables to the duplicity arguments
 
 function send_mail {
  if [ -n "$MAIL_FROM" -o -n "$MAIL_TO" -o -n "$MAIL_CMD" ]; then
-	[[ $MAIL_VERBOSE -lt $(get_maillevel) ]] && return 0:
+	get_subject
+	[[ $MAIL_VERBOSE -lt $MAIL_SUBJECT_LEVEL ]] && return 
    TEMP_MAIL=`mktemp $TEMP_DIR/scduply.mail.XXXXXXXXXX`
    echo Mailing $TEMP_MAIL
    hostname=`hostname`
@@ -573,8 +572,7 @@ Content-Type: text/plain; charset=utf-8
 
 --$boundary--
 EOF
-	grep -i -v -E '^Copying.*to local cache..$' $TEMP_MAIL
-	grep -i -v -E '^gid.*not in range.' $TEMP_MAIL
+	sed -i '/^Copying.*to local cache..$/d;/^[gu]id.*not in range./d' $TEMP_MAIL
    $MAIL_CMD <$TEMP_MAIL
    rm $TEMP_MAIL
  fi
@@ -874,63 +872,18 @@ function var_isset {
 	return 1
 }
 
-
-function clear_report {
-	cat $TEMP_REPORT | awk '{
-		gsub(/<[\/]{0,1}t[drh][ a-zA-Z=]{0,}>/," ",$0)
-		if ($0!~"^[ ]*$" && $0!~"^[ ]*<") print $0
- 	}' | sed 's/^[ ]*//'
-}
-
-function get_maillevel {
-	case $MAIL_SUBJECT in 
-		*OK)
-			echo 2
-			;;
-		*warning)
-			echo 1
-			;;
-		*error)
-			echo 0
-			;;
-	esac
-}
-
 function get_subject {
-	clear_report | awk -v subj="$MAIL_SUBJECT" -v TDSC=$TDSC_warning ' BEGIN {
-		level="OK"
-		level_=0
-	} /^PRE|^BKP|^POST/ {
-		if ($0~"FAILED") {
-			level="error"
-			level_=2
-			exit 0
-		}
-	} /^TotalDestinationSizeChange/ {
-		for (i=2;i<=NF; i++) {
-			if ($i<TDSC) level="warning"
-			level_=1
-		}
-	} /^Errors|^LogErrors/ {
-		for (i=2;i<=NF;i++) {
-			if ($i!=0) {
-				level="error"
-				level_=2
-				exit 0
-			}
-		}
-	} /^LogWarnings/ {
-		for (i=2;i<=NF;i++) {
-         if ($i!=0) {
-            level="warning"
-            level_=1
-         }
-      }
-	} END {
-		printf("%s: %s\n",subj,level)
-	}' 
+	t_MAIL_SUBJECT=$MAIL_SUBJECT
+	[[ -z "$MAIL_VERBOSE" ]] && MAIL_VERBOSE=2
+	MAIL_SUBJECT_LEVEL=0
+	for i in "FAILED" "WARNING" "OK";do
+		grep -Eq "^<tr>.*$i.*td>$" $TEMP_REPORT && {
+			MAIL_SUBJECT="$MAIL_SUBJECT: $i"
+			break
+		} || let MAIL_SUBJECT_LEVEL++ 
+	done
+	unset t_MAIL_SUBJECT
 }
-
 
 function url_encode {
 # based on http://www.shelldorado.com/scripts/cmds/urlencode
@@ -1053,7 +1006,6 @@ Hint:
     report_html_body >>$TEMP_REPORT
     report_html_table $reports >>$TEMP_REPORT
     report_html_trail >>$TEMP_REPORT
-	MAIL_SUBJECT=`get_subject`
     send_mail $TEMP_REPORT $TEMP_LOG
 	rm $TEMP_LOG $TEMP_REPORT
     exit 0
