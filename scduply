@@ -616,7 +616,7 @@ function report_html_table {
   awk '
 BEGIN{
  # no STAMP here
- nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors|OtherProblems",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|FULL|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors|OtherProblems",keys,"|")
 }
 /^JOB: /{
   profile=$2
@@ -658,7 +658,7 @@ END{
       }
       style=keys[s]
       if(s==1)style="JOB"
-      else if(keys[s]~/^(PRE|BKP|POST)$/)style=v
+      else if(keys[s]~/^(PRE|FULL|BKP|POST)$/)style=v
       else if((keys[s]=="TotalDestinationSizeChange")&&!files[p[j]])style="WARNING"
       else if((keys[s]=="Errors")&&v)style="FAILED"
       else if((keys[s]=="LogWarnings")&&v)style="WARNING"
@@ -678,7 +678,7 @@ END{
 function parse_log {
   awk -vstamp="$2" '
 BEGIN{
- nkeys=split("JOB|STAMP|PRE|BKP|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors|OtherProblems",keys,"|")
+ nkeys=split("JOB|STAMP|PRE|BKP|FULL|POST|TYPE|'"$dupl_report_keys"'|LogWarnings|LogErrors|OtherProblems",keys,"|")
 }
 /^Using profile /{
   split($3, m, "'"'"'")
@@ -706,7 +706,7 @@ BEGIN{
 /^Error/{
   res["LogErrors"]++
 }
-/forcing full backup/{
+/forcing full backup|running command FULL/{
   res["TYPE"]="FULL"
 }
 END{
@@ -994,7 +994,7 @@ Hint:
       for i in "$CONFHOME"/*; do
 	if [ -d "$i" -a -f "$i/conf" -a ! -f "$i/skip" ]; then
           T="${i##*/}"
-	  $ME_LONG $T backup
+  		  $ME_LONG $T backup
 	fi
       done
     fi
@@ -1125,8 +1125,13 @@ fi
 # Hint: cmds is also used to check if authentification info sufficient in the next step 
 cmds="$2"; shift 2
 
-# translate backup to batch command 
-cmds=${cmds//backup/pre_bkp_post}
+# translate backup to batch command
+# check day of week
+if [  ! -f $CONFDIR/full ];then 
+	cmds=${cmds//backup/pre_bkp_post}
+else
+	grep -Es "^$(date +%w)" "$CONFDIR/full"> /dev/null && cmds=${cmds//backup/pre_full_post} || cmds=${cmds//backup/pre_bkp_post}
+fi
 
 # complain if command(s) missing
 [ -z $cmds ] && error "  No command given.
