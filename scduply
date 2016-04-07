@@ -29,7 +29,7 @@ export PYTHONIOENCODING=utf-8
 ME_LONG="$0"
 ME="$(basename $0)"
 ME_NAME="${ME%%.*}"
-ME_VERSION="1.5.2.3-sc.1.2"
+ME_VERSION="1.5.2.3-sc.1.5"
 ME_WEBSITE="http://en.skycover.ru/opensource/scduply/"
 
 # default config values
@@ -90,6 +90,7 @@ function set_config { # sets config vars
   PRE="$CONFDIR/pre"
   POST="$CONFDIR/post"
   EXCLUDE="$CONFDIR/exclude"
+  EXCLUDE_PARAM="--exclude$(duplicity_version_lt 703 && echo -globbing)-filelist"
   SRCHOLDER="$CONFDIR/source"
   KEYFILE="$CONFDIR/gpgkey.asc"
   SAVED_ENV="$CONFDIR/saved.env"
@@ -474,8 +475,12 @@ use the older ftplicity version 1.1.1 from $ME_WEBSITE."
 }
 
 function duplicity_version_ge {
-	[ "$DUPL_VERSION_VALUE" -ge "$1" ] && return 0
-	return 1
+	[[ "$DUPL_VERSION_VALUE" -ge "$1" ]]
+}
+
+# backport from duply 1.11
+function duplicity_version_lt {
+  ! duplicity_version_ge "$1"
 }
 
 function run_script { # run pre/post scripts
@@ -1484,19 +1489,19 @@ case "$cmd" in
     run_script $script
     ;;
   bkp)
-    duplify -- "${dupl_opts[@]}" --exclude-globbing-filelist "$EXCLUDE" \
+    duplify -- "${dupl_opts[@]}" $EXCLUDE_PARAM "$EXCLUDE" \
           "$SOURCE" "$BACKEND_URL"
     ;;
   incr)
-    duplify incr -- "${dupl_opts[@]}" --exclude-globbing-filelist "$EXCLUDE" \
+    duplify incr -- "${dupl_opts[@]}" $EXCLUDE_PARAM "$EXCLUDE" \
           "$SOURCE" "$BACKEND_URL"
     ;;
   full)
-    duplify full -- "${dupl_opts[@]}" --exclude-globbing-filelist "$EXCLUDE" \
+    duplify full -- "${dupl_opts[@]}" $EXCLUDE_PARAM "$EXCLUDE" \
           "$SOURCE" "$BACKEND_URL"
     ;;
   verify)
-    duplify verify -- "${dupl_opts[@]}" --exclude-globbing-filelist "$EXCLUDE" \
+    duplify verify -- "${dupl_opts[@]}" $EXCLUDE_PARAM "$EXCLUDE" \
           "$BACKEND_URL" "$SOURCE"
     ;;
   list)
