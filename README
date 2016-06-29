@@ -11,7 +11,7 @@ server's backups via the configuration files and simple commands.
 * Gives useful commands for backup and restore.
 * Saves the backup logs, create and mail HTML reports.
 
-The project's page is: http://en.skycover.ru/opensource/scduply
+The project's page is: http://skycover.co/products/scduply
 
 COPYRIGHT:
 scduply is the fork of duply made by SkyCover Company
