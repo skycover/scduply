@@ -1137,11 +1137,20 @@ if [  ! -f $CONFDIR/full ];then
 else
 	cmds=${cmds//backup/pre_bkp_post}
 	while read str; do
-		if [ `expr $(date +%V) % $(echo $str|cut -f1 -d:)` -eq 0 ] && [ $(echo $str|cut -f2 -d:) -eq $(date +%w) ];then
-			echo 'force full backup'
-			cmds=${cmds//bkp/full}
-			break
-		fi
+        echo $str|grep -E "^[[:digit:]]+:[[:digit:]]$">>/dev/null && {
+		    if [ `expr $(date +%V) % $(echo $str|cut -f1 -d:)` -eq 0 ] && [ $(echo $str|cut -f2 -d:) -eq $(date +%w) ]
+            then
+			    echo 'force full backup'
+			    cmds=${cmds//bkp/full}
+			    break
+		    fi
+        } || {
+            if [ $(echo $str|grep -E "^[[:digit:]]$") -eq $(date +%w)];then
+                echo 'force full backup'
+                cmds=%{cmds//bkp/full}
+                break
+            fi
+        }
 		# grep -Es "^$(`expr $weeknumber %`)" "$CONFDIR/full"> /dev/null && cmds=${cmds//backup/pre_full_post} || cmds=${cmds//backup/pre_bkp_post}
 	done < $CONFDIR/full
 fi
