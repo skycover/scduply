@@ -29,7 +29,7 @@ export PYTHONIOENCODING=utf-8
 ME_LONG="$0"
 ME="$(basename $0)"
 ME_NAME="${ME%%.*}"
-ME_VERSION="1.5.2.3-sc.1.5"
+ME_VERSION="1.5.2.3-sc.1.6"
 ME_WEBSITE="http://en.skycover.ru/opensource/scduply/"
 
 # default config values
@@ -1135,7 +1135,15 @@ cmds="$2"; shift 2
 if [  ! -f $CONFDIR/full ];then 
 	cmds=${cmds//backup/pre_bkp_post}
 else
-	grep -Es "^$(date +%w)" "$CONFDIR/full"> /dev/null && cmds=${cmds//backup/pre_full_post} || cmds=${cmds//backup/pre_bkp_post}
+	cmds=${cmds//backup/pre_bkp_post}
+	while read str; do
+		if [ `expr $(date +%V) % $(echo $str|cut -f1 -d:)` -eq 0 ] && [ $(echo $str|cut -f2 -d:) -eq $(date +%w) ];then
+			echo 'force full backup'
+			cmds=${cmds//bkp/full}
+			break
+		fi
+		# grep -Es "^$(`expr $weeknumber %`)" "$CONFDIR/full"> /dev/null && cmds=${cmds//backup/pre_full_post} || cmds=${cmds//backup/pre_bkp_post}
+	done < $CONFDIR/full
 fi
 
 # complain if command(s) missing
