@@ -1147,7 +1147,7 @@ else
         } || {
             if [ $(echo $str|grep -E "^[[:digit:]]$") -eq $(date +%w) ];then
                 echo 'force full backup'
-                cmds=%{cmds//bkp/full}
+                cmds=${cmds//bkp/full}
                 break
             fi
         }
