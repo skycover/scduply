@@ -1138,12 +1138,10 @@ cmds="$2"; shift 2
 # translate backup to batch command
 # check day of week
 # :TODO move this part
-if [  ! -f $CONFDIR/full ];then
-	[[ -z "$AUTOPURGE" ]] && cmds=${cmds//backup/pre_bkp_post} || cmds=${cmds//backup/pre_bkp_post_purge-${AUTOPURGE}-force}
-else
-	[[ -z "$AUTOPURGE" ]] && cmds=${cmds//backup/pre_bkp_post} || cmds=${cmds//backup/pre_bkp_post_purge-${AUTOPURGE}-force}
+[[ -z "$AUTOPURGE" ]] && cmds=${cmds//backup/pre_bkp_post} || cmds=${cmds//backup/pre_bkp_post_purge-${AUTOPURGE,,}-force}
+if [ -f $CONFDIR/full ];then
 	while read str; do
-        echo $str|grep -E "^[[:digit:]]+:[[:digit:]]$">>/dev/null && {
+        echo $str|grep -E "^[0-9]+:[0-9]$">>/dev/null && {
 		    if [ `expr $(date +%V) % $(echo $str|cut -f1 -d:)` -eq 0 ] && [ $(echo $str|cut -f2 -d:) -eq $(date +%w) ]
             then
 			    echo 'force full backup'
@@ -1543,11 +1541,11 @@ case "$cmd" in
     duplify remove-all-but-n-full "${MAX_FULL_BACKUPS:-1}" \
           -- "${dupl_opts[@]}" "$BACKEND_URL"
     ;;
-  purge-AGE-force)
+  purge-age-force)
     duplify remove-older-than "${MAX_AGE:-1M}" \
           -- "${dupl_opts[@]} --force" "$BACKEND_URL"
     ;;
-  purge-FULL-force)
+  purge-full-force)
     duplify remove-all-but-n-full "${MAX_FULL_BACKUPS:-1}" \
           -- "${dupl_opts[@]} --force" "$BACKEND_URL"
     ;;
