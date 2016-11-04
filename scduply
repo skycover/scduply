@@ -314,6 +314,11 @@ function write_config {
 # don't forget to leave a separating space char at the end
 #EXTRA_DUPL_PARAMS=""
 
+# autorotate backups
+# sets autorotate option, available values
+# AGE, FULL
+#AUTOPURGE = "FULL"
+
 # mailing settings to send bkpall report and log
 #MAIL_FROM=root
 #MAIL_TO=root
@@ -1132,10 +1137,11 @@ cmds="$2"; shift 2
 
 # translate backup to batch command
 # check day of week
-if [  ! -f $CONFDIR/full ];then 
-	cmds=${cmds//backup/pre_bkp_post}
+# :TODO move this part
+if [  ! -f $CONFDIR/full ];then
+	[[ -z "$AUTOPURGE" ]] && cmds=${cmds//backup/pre_bkp_post} || cmds=${cmds//backup/pre_bkp_post_purge-${AUTOPURGE}-force}
 else
-	cmds=${cmds//backup/pre_bkp_post}
+	[[ -z "$AUTOPURGE" ]] && cmds=${cmds//backup/pre_bkp_post} || cmds=${cmds//backup/pre_bkp_post_purge-${AUTOPURGE}-force}
 	while read str; do
         echo $str|grep -E "^[[:digit:]]+:[[:digit:]]$">>/dev/null && {
 		    if [ `expr $(date +%V) % $(echo $str|cut -f1 -d:)` -eq 0 ] && [ $(echo $str|cut -f2 -d:) -eq $(date +%w) ]
@@ -1536,6 +1542,14 @@ case "$cmd" in
   purge-full)
     duplify remove-all-but-n-full "${MAX_FULL_BACKUPS:-1}" \
           -- "${dupl_opts[@]}" "$BACKEND_URL"
+    ;;
+  purge-AGE-force)
+    duplify remove-older-than "${MAX_AGE:-1M}" \
+          -- "${dupl_opts[@]} --force" "$BACKEND_URL"
+    ;;
+  purge-FULL-force)
+    duplify remove-all-but-n-full "${MAX_FULL_BACKUPS:-1}" \
+          -- "${dupl_opts[@]} --force" "$BACKEND_URL"
     ;;
   restore)
     OUT_PATH="${ftpl_pars[0]}"; TIME="${ftpl_pars[1]:-now}";
