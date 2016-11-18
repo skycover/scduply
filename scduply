@@ -746,7 +746,7 @@ function find_last_stamp {
 function save_log {
   # Create directory for duplicity logs
   mkdir -p $LOG_DIR
-  TSTAMP=`date +%Y%m%dT%H%M%SZ`
+  TSTAMP=`TZ="UTC" date +%Y%m%dT%H%M%SZ`
   if [ "$cmd" = "backup" -o "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
     IS_PROBLEM=0
     # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
