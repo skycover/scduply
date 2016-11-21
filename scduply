@@ -29,7 +29,7 @@ export PYTHONIOENCODING=utf-8
 ME_LONG="$0"
 ME="$(basename $0)"
 ME_NAME="${ME%%.*}"
-ME_VERSION="1.5.2.3-sc.1.6"
+ME_VERSION="1.5.2.5-sc.1.6"
 ME_WEBSITE="http://en.skycover.ru/opensource/scduply/"
 
 # default config values
@@ -160,6 +160,8 @@ COMMANDS FOR SPECIFIED PROFILE:
                      or no earlier backup is found
               incremental - in all other cases
   bkp:       as above but without executing pre/post scripts
+  forcedfull:
+             full backup with pre/post script executuin(batch: pre_full_post)
   full:      force full backup
   incr:      force incremental backup
   list [<age>]:      
@@ -747,7 +749,7 @@ function save_log {
   # Create directory for duplicity logs
   mkdir -p $LOG_DIR
   TSTAMP=`TZ="UTC" date +%Y%m%dT%H%M%SZ`
-  if [ "$cmd" = "backup" -o "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" ]; then
+  if [ "$cmd" = "backup" -o "$cmd" = "bkp" -o "$cmd" = "full" -o "$cmd" = "incr" -o "$cmd" = "forcedfull" ]; then
     IS_PROBLEM=0
     # XXX awk -F"." should be regexp, but in fact is real dot. Tested for mawk and gawk. 
     STAMP=`find_last_stamp`
@@ -1137,8 +1139,10 @@ cmds="$2"; shift 2
 
 # translate backup to batch command
 # check day of week
-# :TODO move this part
-[[ -z "$AUTOPURGE" ]] && cmds=${cmds//backup/pre_bkp_post} || cmds=${cmds//backup/pre_bkp_post_purge-${AUTOPURGE,,}-force}
+
+cmds=${cmds//forcedfull/pre_full_post}
+cmds=${cmds//backup/pre_bkp_post}
+[[ ! -z "$AUTOPURGE" && ( "$cmds" =~ "bkp" || "$cmds" =~ "full" || "$cmds" =~ "incr" ) ]] && cmds=${cmds}_purge-${AUTOPURGE,,}-force
 if [ -f $CONFDIR/full ];then
 	while read str; do
         echo $str|grep -E "^[0-9]+:[0-9]$">>/dev/null && {
