@@ -1006,7 +1006,7 @@ Hint:
       for i in "$CONFHOME"/*; do
 	if [ -d "$i" -a -f "$i/conf" -a ! -f "$i/skip" ]; then
           T="${i##*/}"
-  		  $ME_LONG $T backup
+          BKPALL_WEEKDAY=$(date +%w) BKPALL_WEEK=$(date +%V) $ME_LONG $T backup
 	fi
       done
     fi
@@ -1143,23 +1143,22 @@ cmds="$2"; shift 2
 cmds=${cmds//forcedfull/pre_full_post}
 cmds=${cmds//backup/pre_bkp_post}
 [[ ! -z "$AUTOPURGE" && ( "$cmds" =~ "bkp" || "$cmds" =~ "full" || "$cmds" =~ "incr" ) ]] && cmds=${cmds}_purge-${AUTOPURGE,,}-force
-if [ -f $CONFDIR/full ];then
+if [[ -f $CONFDIR/full && ! -z "$BKPALL_WEEK" ]];then
 	while read str; do
         echo $str|grep -E "^[0-9]+:[0-9]$">>/dev/null && {
-		    if [ `expr $(date +%V) % $(echo $str|cut -f1 -d:)` -eq 0 ] && [ $(echo $str|cut -f2 -d:) -eq $(date +%w) ]
+		    if [ `expr $BKPALL_WEEK % $(echo $str|cut -f1 -d:)` -eq 0 ] && [ $(echo $str|cut -f2 -d:) -eq $BKPALL_WEEKDAY ]
             then
 			    echo 'force full backup'
 			    cmds=${cmds//bkp/full}
 			    break
 		    fi
         } || {
-            if [ $(echo $str|grep -E "^[[:digit:]]$") -eq $(date +%w) ];then
+            if [ $(echo $str|grep -E "^[[:digit:]]$") -eq $BKPALL_WEEKDAY ];then
                 echo 'force full backup'
                 cmds=${cmds//bkp/full}
                 break
             fi
         }
-		# grep -Es "^$(`expr $weeknumber %`)" "$CONFDIR/full"> /dev/null && cmds=${cmds//backup/pre_full_post} || cmds=${cmds//backup/pre_bkp_post}
 	done < $CONFDIR/full
 fi
 
