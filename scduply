@@ -988,6 +988,8 @@ Hint:
     ;;
   bkpall)
     export LC_ALL=C
+    export BKPALL_WEEKDAY=$(date +%w)
+    export BKPALL_WEEK=$(date +%V)
     set_config
     if [ -n "$CONFHOME" ]; then
       if [ -f "$MAINCONF.$SCDW" ]; then
@@ -1004,10 +1006,10 @@ Hint:
     {
     if [ -n "$CONFHOME" ]; then
       for i in "$CONFHOME"/*; do
-	if [ -d "$i" -a -f "$i/conf" -a ! -f "$i/skip" ]; then
+	    if [ -d "$i" -a -f "$i/conf" -a ! -f "$i/skip" ]; then
           T="${i##*/}"
-          BKPALL_WEEKDAY=$(date +%w) BKPALL_WEEK=$(date +%V) $ME_LONG $T backup
-	fi
+          $ME_LONG $T backup
+	    fi
       done
     fi
     } 2>&1 | tee -a $TEMP_LOG
